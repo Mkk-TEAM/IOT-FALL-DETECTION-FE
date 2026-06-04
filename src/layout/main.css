@@ -1,0 +1,364 @@
+
+:root {
+    --primary-color: #198754;
+    --secondary-color: #146c43;
+    --light-green: #d1e7dd;
+    --dark-color: #343a40;
+    --light-gray: #f8f9fa;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    color: #333;
+    background-color: #f8fff8;
+    padding-top: 80px; 
+}
+
+
+/* ****** HEADER ****** */
+
+.navbar {
+  transition: all 0.3s ease; /* Hiệu ứng chuyển tiếp mượt mà */
+}
+
+.navbar.shrink {
+  padding: 5px 0; /* Giảm padding khi cuộn */
+}
+
+#logo {
+  transition: width 0.3s ease, height 0.3s ease; /* Hiệu ứng chuyển tiếp cho logo */
+}
+
+.navbar.shrink #logo {
+  width: 60px; /* Giảm kích thước logo khi cuộn */
+  height: 60px;
+}
+
+#brand-name {
+  transition: font-size 0.3s ease; /* Hiệu ứng chuyển tiếp cho tên thương hiệu */
+}
+
+.navbar.shrink #brand-name {
+  font-size: 1.2rem; /* Giảm kích thước chữ khi cuộn */
+}
+
+
+
+
+/* ****** HOME ****** */
+
+.hover-effect {
+  position: relative;
+  padding-bottom: 5px;
+}
+
+.hover-effect::after {
+  content: '';
+  position: absolute;
+  width: 0;
+  height: 2px;
+  bottom: 0;
+  left: 0;
+  background-color: #fff;
+  transition: width 0.3s ease;
+}
+
+.hover-effect:hover::after {
+  width: 100%;
+
+}
+
+
+/* Hiệu ứng ảnh */
+.forest-image, .gis-image {
+  position: relative;
+  overflow: hidden;
+  border-radius: 8px;
+}
+
+.forest-image .img-overlay, .gis-image .img-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(25, 135, 84, 0.3);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.forest-image:hover .img-overlay, .gis-image:hover .img-overlay {
+  opacity: 1;
+}
+
+.forest-image:hover img, .gis-image:hover img {
+  transform: scale(1.03);
+  transition: transform 0.5s ease;
+}
+
+.hero-image {
+  transition: transform 0.5s ease, filter 0.5s ease; /* Thêm hiệu ứng chuyển tiếp */
+}
+
+.hero-image:hover {
+  transform: scale(1.05); /* Phóng to hình ảnh khi di chuột */
+  filter: brightness(0.8); /* Làm tối hình ảnh khi di chuột */
+}
+
+.hero-overlay {
+  position: relative; /* Đảm bảo overlay nằm trên hình ảnh */
+  z-index: 1; /* Đặt z-index cao hơn hình ảnh */
+} 
+
+/* Cards */
+.card {
+  transition: transform 0.3s, box-shadow 0.3s;
+  border: none;
+}
+
+.card:hover {
+  transform: translateY(-10px);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+}
+
+/* Icon Wrapper */
+.icon-wrapper {
+  width: 70px;
+  height: 70px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Hero Section */
+/* .hero {
+  padding: 100px 0;
+} */
+
+.hero {
+  height: 100vh;
+  background-size: cover;
+  background-position: center center;
+  background-repeat: no-repeat;
+}
+.position-relative {
+  position: relative;
+}
+
+.z-index-1 {
+  z-index: 1;
+}
+
+.min-vh-80 {
+  min-height: 80vh;
+}
+
+/* Responsive: trên mobile, điều chỉnh background-position nếu cần */
+@media (max-width: 768px) {
+  .hero {
+    background-position: 75% center; /* Di chuyển ảnh sang phải một chút để tập trung vào phần quan trọng */
+  }
+}
+
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .hero {
+    padding: 60px 0;
+  }
+  
+  .display-4 {
+    font-size: 2.5rem;
+  }
+}
+
+
+
+
+
+
+/* ****** CONTACT ****** */
+
+.contact-header {
+    background: linear-gradient(rgba(25, 135, 84, 0.85), rgba(20, 108, 67, 0.9)), url('https://images.unsplash.com/photo-1469474968028-56623f02e42e?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80');
+    background-size: cover;
+    background-position: center;
+    padding: 100px 0;
+    color: white;
+    text-align: center;
+}
+
+.contact-card {
+    border-radius: 12px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    border: none;
+    overflow: hidden;
+}
+
+.contact-card:hover {
+    transform: translateY(-10px);
+    box-shadow: 0 15px 40px rgba(0, 0, 0, 0.15);
+}
+
+.contact-info {
+    background-color: var(--light-gray);
+}
+
+.contact-icon {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background-color: var(--light-green);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 20px;
+}
+
+.contact-icon i {
+    color: var(--primary-color);
+    font-size: 24px;
+}
+
+.contact-form .form-control {
+    border-radius: 8px;
+    padding: 12px 15px;
+    border: 1px solid #dee2e6;
+    margin-bottom: 20px;
+}
+
+.contact-form .form-control:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 0.25rem rgba(25, 135, 84, 0.25);
+}
+
+.btn-primary {
+    background-color: var(--primary-color);
+    border-color: var(--primary-color);
+    padding: 12px 30px;
+    border-radius: 8px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+.btn-primary:hover {
+    background-color: var(--secondary-color);
+    border-color: var(--secondary-color);
+    transform: translateY(-2px);
+}
+
+.map-container {
+    border-radius: 12px;
+    overflow: hidden;
+    height: 400px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+}
+
+.map-container iframe {
+    width: 100%;
+    height: 100%;
+    border: none;
+}
+
+.contact-item {
+    display: flex;
+    margin-bottom: 25px;
+    align-items: flex-start;
+}
+
+.contact-icon-sm {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background-color: var(--light-green);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 15px;
+    flex-shrink: 0;
+}
+
+.contact-icon-sm i {
+    color: var(--primary-color);
+    font-size: 18px;
+}
+
+.social-icons a {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background-color: var(--light-green);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 10px;
+    transition: all 0.3s ease;
+}
+
+.social-icons a:hover {
+    background-color: var(--primary-color);
+    transform: translateY(-3px);
+}
+
+.social-icons a:hover i {
+    color: white;
+}
+
+.social-icons a i {
+    color: var(--primary-color);
+    font-size: 18px;
+}
+
+.hours-list {
+    list-style: none;
+    padding: 0;
+}
+
+.hours-list li {
+    display: flex;
+    justify-content: space-between;
+    padding: 8px 0;
+    border-bottom: 1px dashed #e9ecef;
+}
+
+.hours-list li:last-child {
+    border-bottom: none;
+}
+
+.section-title {
+    position: relative;
+    padding-bottom: 15px;
+    margin-bottom: 30px;
+}
+
+.section-title::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 60px;
+    height: 3px;
+    background-color: var(--primary-color);
+}
+
+
+.contact-image {
+    border-radius: 12px;
+    overflow: hidden;
+    height: 100%;
+}
+
+.contact-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.5s ease;
+}
+
+.contact-image:hover img {
+    transform: scale(1.05);
+}
+
+
+
