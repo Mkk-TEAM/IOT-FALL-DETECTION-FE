@@ -60,7 +60,7 @@ export default function DeviceManagementPage() {
         {/* Top */}
         <div className="mb-8 flex items-start justify-between">
           <div>
-            <h2 className="text-5xl font-bold text-gray-900">
+            <h2 className="text-3xl font-bold tracking-tight text-gray-900">
               Các thiết bị đã kết nối
             </h2>
 
@@ -105,7 +105,7 @@ export default function DeviceManagementPage() {
                 </div>
 
                 <div>
-                  <h3 className="text-2xl font-semibold text-gray-900">
+                  <h3 className="text-1xl font-semibold text-gray-900">
                     {device.name}
                   </h3>
 

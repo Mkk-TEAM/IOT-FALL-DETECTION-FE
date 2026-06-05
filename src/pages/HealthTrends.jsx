@@ -8,7 +8,7 @@ export default function HealthTrendsPage() {
         {/* Top */}
         <div className="mb-10 flex flex-col justify-between gap-6 lg:flex-row lg:items-center">
           <div>
-            <h2 className="text-5xl font-bold tracking-tight text-gray-900">
+            <h2 className="text-3xl font-bold tracking-tight text-gray-900">
               Xu hướng Sức khỏe
             </h2>
             <p className="mt-3 text-xl text-gray-500">

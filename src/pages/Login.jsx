@@ -1,16 +1,90 @@
-import { Phone, Lock, Eye, Shield } from "lucide-react";
-import { Link } from "react-router-dom";
-import logo from "../assets/logo.png";
+
+import { Phone, Lock, Eye, EyeOff, Shield } from "lucide-react";
+import { Link, useNavigate } from "react-router-dom";
 import { useState } from "react";
+import logo from "../assets/logo.png";
+import { authApi } from "../api/authApi";
+
 export default function LoginPage() {
+  const navigate = useNavigate();
+
   const [showPassword, setShowPassword] = useState(false);
+
+  const [loginForm, setLoginForm] = useState({
+    usernameOrGmail: "",
+    password: "",
+  });
+
+  const [loginError, setLoginError] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const handleChangeLogin = (e) => {
+    const { name, value } = e.target;
+
+    setLoginForm((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
+
+  const handleLogin = async (e) => {
+    e.preventDefault();
+
+    setLoginError("");
+
+    if (!loginForm.usernameOrGmail || !loginForm.password) {
+      setLoginError("Please enter your account and password.");
+      return;
+    }
+
+    setIsSubmitting(true);
+
+    try {
+      const res = await authApi.login({
+        usernameOrGmail: loginForm.usernameOrGmail,
+        password: loginForm.password,
+      });
+
+      const { meta } = res.data || {};
+      const { token, userInfo } = meta || {};
+
+      if (token) {
+        localStorage.setItem("token", token);
+      }
+
+      if (userInfo) {
+        localStorage.setItem(
+          "user",
+          JSON.stringify(userInfo)
+        );
+      }
+
+      const role = userInfo?.role;
+
+      if (role === "nhanvien") {
+        navigate("/admin/dashboard");
+      } else {
+        navigate("/");
+      }
+    } catch (error) {
+      const msg =
+        error?.response?.data?.message ||
+        "Login failed. Please check your credentials.";
+
+      setLoginError(msg);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   return (
     <div className="grid min-h-screen grid-cols-1 overflow-hidden lg:grid-cols-2">
-      
+
       {/* LEFT SIDE */}
       <div className="flex items-center justify-center bg-white px-8 py-12">
         <div className="w-full max-w-[420px]">
-          
+
+          {/* LOGO */}
           <div className="mb-20 flex items-center gap-4">
             <Link to="/" className="flex items-center gap-4">
               <img
@@ -37,12 +111,14 @@ export default function LoginPage() {
           </div>
 
           {/* FORM */}
-          <form className="space-y-8">
-            
-            {/* PHONE */}
+          <form
+            className="space-y-8"
+            onSubmit={handleLogin}
+          >
+            {/* ACCOUNT */}
             <div>
               <label className="mb-3 block text-[18px] font-medium text-[#111827]">
-                Phone number
+                Account / Email / Phone
               </label>
 
               <div className="flex h-[66px] items-center rounded-2xl border border-[#d1d5db] bg-[#fafafa] px-5 shadow-sm">
@@ -50,7 +126,10 @@ export default function LoginPage() {
 
                 <input
                   type="text"
-                  placeholder="0xxx xxx xxx"
+                  name="usernameOrGmail"
+                  value={loginForm.usernameOrGmail}
+                  onChange={handleChangeLogin}
+                  placeholder="Enter account"
                   className="ml-4 w-full bg-transparent text-[18px] outline-none placeholder:text-[#9ca3af]"
                 />
               </div>
@@ -67,14 +146,28 @@ export default function LoginPage() {
 
                 <input
                   type={showPassword ? "text" : "password"}
+                  name="password"
+                  value={loginForm.password}
+                  onChange={handleChangeLogin}
                   placeholder="••••••••"
                   className="ml-4 w-full bg-transparent text-[18px] outline-none placeholder:text-[#9ca3af]"
                 />
 
-                <Eye
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="h-5 w-5 cursor-pointer text-[#6b7280] hover:text-blue-600"
-                />
+                {showPassword ? (
+                  <EyeOff
+                    onClick={() =>
+                      setShowPassword(false)
+                    }
+                    className="h-5 w-5 cursor-pointer text-[#6b7280]"
+                  />
+                ) : (
+                  <Eye
+                    onClick={() =>
+                      setShowPassword(true)
+                    }
+                    className="h-5 w-5 cursor-pointer text-[#6b7280]"
+                  />
+                )}
               </div>
             </div>
 
@@ -85,26 +178,39 @@ export default function LoginPage() {
                   type="checkbox"
                   className="h-5 w-5 rounded border-gray-300 accent-blue-600"
                 />
-
                 Remember me
               </label>
 
-              <button
-                type="button"
+              <Link
+                to="/forgot-password"
                 className="text-[17px] font-medium text-blue-700 hover:underline"
               >
                 Forgot password?
-              </button>
+              </Link>
             </div>
 
-            {/* SIGN IN */}
-            <button className="h-[66px] w-full rounded-2xl bg-blue-700 text-[22px] font-semibold text-white shadow-md transition hover:bg-blue-800">
-              Sign In
+            {/* ERROR */}
+            {loginError && (
+              <div className="rounded-xl bg-red-50 p-4 text-sm text-red-600">
+                {loginError}
+              </div>
+            )}
+
+            {/* LOGIN */}
+            <button
+              type="submit"
+              disabled={isSubmitting}
+              className="h-[66px] w-full rounded-2xl bg-blue-700 text-[22px] font-semibold text-white shadow-md transition hover:bg-blue-800 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              {isSubmitting
+                ? "Signing In..."
+                : "Sign In"}
             </button>
 
             {/* GUEST */}
             <button
               type="button"
+              onClick={() => navigate("/")}
               className="h-[66px] w-full rounded-2xl border border-[#cfd4dc] bg-white text-[22px] font-medium text-[#1f3b82] transition hover:bg-gray-50"
             >
               Continue as Guest
@@ -113,10 +219,11 @@ export default function LoginPage() {
 
           {/* FOOTER */}
           <div className="mt-10 flex items-center justify-between text-[17px]">
-            <Link to="/register" className="flex items-center gap-2">
-              <span className="text-[#374151]">
-                Don't have an account?
-              </span>
+            <Link
+              to="/register"
+              className="text-[#374151]"
+            >
+              Don't have an account?
             </Link>
 
             <button className="font-semibold text-[#1f3b82] hover:underline">
@@ -124,7 +231,6 @@ export default function LoginPage() {
             </button>
           </div>
 
-          {/* BOTTOM TEXT */}
           <div className="mt-28 text-[14px] uppercase tracking-wide text-[#9ca3af]">
             VIGILANCE HEALTHCARE IOT. CLINICAL GRADE PRECISION.
           </div>
@@ -133,20 +239,15 @@ export default function LoginPage() {
 
       {/* RIGHT SIDE */}
       <div className="relative hidden lg:block">
-        
-        {/* IMAGE */}
         <img
           src="https://images.unsplash.com/photo-1581579438747-1dc8d17bbce4?q=80&w=1400&auto=format&fit=crop"
           alt="elderly"
           className="h-full w-full object-cover"
         />
 
-        {/* OVERLAY */}
         <div className="absolute inset-0 bg-black/10" />
 
-        {/* CARD */}
         <div className="absolute bottom-12 left-12 w-[500px] rounded-[28px] bg-white/95 p-8 shadow-2xl backdrop-blur-sm">
-          
           <div className="mb-5 flex items-center gap-3">
             <div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-100">
               <Shield className="h-5 w-5 text-blue-700" />
@@ -166,3 +267,4 @@ export default function LoginPage() {
     </div>
   );
 }
+

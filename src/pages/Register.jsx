@@ -6,22 +6,217 @@ import {
   Shield,
   KeyRound,
 } from "lucide-react";
-
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import logo from "../assets/logo.png";
+import { authApi } from "../api/authApi";
 
 export default function RegisterPage() {
+  const navigate = useNavigate();
+
+  const [loading, setLoading] = useState(false);
+
   const [otpSent, setOtpSent] = useState(false);
+  const [otpVerified, setOtpVerified] = useState(false);
+
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
+
+  const [form, setForm] = useState({
+    ho: "",
+    ten: "",
+    email: "",
+    sdt: "",
+    username: "",
+    otp: "",
+    password: "",
+    confirmPassword: "",
+  });
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+
+    setForm((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
+
+  // =====================
+  // SEND OTP
+  // =====================
+
+  const handleSendOtp = async () => {
+    setError("");
+    setSuccess("");
+
+    if (
+      !form.ho ||
+      !form.ten ||
+      !form.email ||
+      !form.sdt ||
+      !form.username
+    ) {
+      setError("Please fill all required fields.");
+      return;
+    }
+
+    try {
+      setLoading(true);
+
+      await authApi.sendOtp({
+        email: form.email,
+        sdt: form.sdt,
+      });
+
+      setOtpSent(true);
+
+      setSuccess("OTP has been sent successfully.");
+    } catch (error) {
+      setError(
+        error?.response?.data?.message ||
+          "Failed to send OTP."
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // =====================
+  // VERIFY OTP
+  // =====================
+
+  const handleVerifyOtp = async () => {
+    setError("");
+    setSuccess("");
+
+    if (!form.otp) {
+      setError("Please enter OTP.");
+      return;
+    }
+
+    try {
+      setLoading(true);
+
+      await authApi.verifyOtp({
+        email: form.email,
+        otp: form.otp,
+      });
+
+      setOtpVerified(true);
+
+      setSuccess("OTP Matched");
+    } catch (error) {
+      setOtpVerified(false);
+
+      setError(
+        error?.response?.data?.message ||
+          "Invalid OTP."
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // =====================
+  // REGISTER
+  // =====================
+
+  const handleRegister = async (e) => {
+  e.preventDefault();
+
+  setError("");
+  setSuccess("");
+
+  const {
+    ho,
+    ten,
+    email,
+    sdt,
+    username,
+    password,
+    confirmPassword,
+    otp,
+  } = form;
+
+  // Kiểm tra thông tin bắt buộc
+  if (
+    !ho ||
+    !ten ||
+    !email ||
+    !sdt ||
+    !username ||
+    !password ||
+    !confirmPassword
+  ) {
+    setError("Vui lòng nhập đầy đủ thông tin.");
+    return;
+  }
+
+  // Password tối thiểu
+  if (password.length < 6) {
+    setError("Mật khẩu phải có ít nhất 6 ký tự.");
+    return;
+  }
+
+  // Confirm password
+  if (password !== confirmPassword) {
+    setError("Mật khẩu nhập lại không khớp.");
+    return;
+  }
+
+  // Chưa nhập OTP
+  if (!otp) {
+    setError("Vui lòng nhập mã OTP.");
+    return;
+  }
+
+  // Chưa bấm Validate OTP
+  if (!otpVerified) {
+    setError("OTP chưa được xác thực hoặc không hợp lệ.");
+    return;
+  }
+
+  try {
+    setLoading(true);
+
+    await authApi.register({
+      ho,
+      ten,
+      email,
+      sdt,
+      taikhoan: username,
+      password,
+      otp,
+    });
+
+    setSuccess(
+      "Đăng ký thành công. Đang chuyển sang đăng nhập..."
+    );
+
+    setTimeout(() => {
+      navigate("/login");
+    }, 1500);
+
+  } catch (error) {
+    setError(
+      error?.response?.data?.message ||
+      "Đăng ký thất bại."
+    );
+  } finally {
+    setLoading(false);
+  }
+};
 
   return (
     <div className="grid min-h-screen grid-cols-1 overflow-hidden lg:grid-cols-2">
-      
       {/* LEFT */}
       <div className="flex items-center justify-center bg-white px-8 py-12">
         <div className="w-full max-w-[460px]">
-
           {/* LOGO */}
-          <Link to="/" className="mb-16 flex items-center gap-3">
+          <Link
+            to="/"
+            className="mb-16 flex items-center gap-3"
+          >
             <img
               src={logo}
               alt="logo"
@@ -44,121 +239,220 @@ export default function RegisterPage() {
             </p>
           </div>
 
-          {/* FORM */}
-          <form className="space-y-6">
-
-            {/* FULL NAME */}
+          <form
+            className="space-y-6"
+            onSubmit={handleRegister}
+          >
+            {/* HỌ */}
             <div>
-              <label className="mb-2 block text-[17px] font-medium text-[#111827]">
-                Full Name
+              <label className="mb-2 block text-[17px] font-medium">
+                Last Name
               </label>
 
-              <div className="flex h-[64px] items-center rounded-2xl border border-[#d1d5db] bg-[#fafafa] px-5">
-                <User className="h-5 w-5 text-[#6b7280]" />
+              <div className="flex h-[64px] items-center rounded-2xl border bg-[#fafafa] px-5">
+                <User className="h-5 w-5 text-gray-500" />
 
                 <input
                   type="text"
-                  placeholder="Nguyen Van A"
-                  className="ml-4 w-full bg-transparent text-[17px] outline-none"
+                  name="ho"
+                  value={form.ho}
+                  onChange={handleChange}
+                  placeholder="Nguyen"
+                  className="ml-4 w-full bg-transparent outline-none"
+                />
+              </div>
+            </div>
+
+            {/* TÊN */}
+            <div>
+              <label className="mb-2 block text-[17px] font-medium">
+                First Name
+              </label>
+
+              <div className="flex h-[64px] items-center rounded-2xl border bg-[#fafafa] px-5">
+                <User className="h-5 w-5 text-gray-500" />
+
+                <input
+                  type="text"
+                  name="ten"
+                  value={form.ten}
+                  onChange={handleChange}
+                  placeholder="Van A"
+                  className="ml-4 w-full bg-transparent outline-none"
                 />
               </div>
             </div>
 
             {/* PHONE */}
             <div>
-              <label className="mb-2 block text-[17px] font-medium text-[#111827]">
+              <label className="mb-2 block text-[17px] font-medium">
                 Phone Number
               </label>
 
-              <div className="flex h-[64px] items-center rounded-2xl border border-[#d1d5db] bg-[#fafafa] px-5">
-                <Phone className="h-5 w-5 text-[#6b7280]" />
+              <div className="flex h-[64px] items-center rounded-2xl border bg-[#fafafa] px-5">
+                <Phone className="h-5 w-5 text-gray-500" />
 
                 <input
                   type="text"
+                  name="sdt"
+                  value={form.sdt}
+                  onChange={handleChange}
                   placeholder="0xxx xxx xxx"
-                  className="ml-4 w-full bg-transparent text-[17px] outline-none"
+                  className="ml-4 w-full bg-transparent outline-none"
                 />
               </div>
             </div>
 
             {/* EMAIL */}
             <div>
-              <label className="mb-2 block text-[17px] font-medium text-[#111827]">
+              <label className="mb-2 block text-[17px] font-medium">
                 Email
               </label>
 
-              <div className="flex h-[64px] items-center rounded-2xl border border-[#d1d5db] bg-[#fafafa] px-5">
-                <Mail className="h-5 w-5 text-[#6b7280]" />
+              <div className="flex h-[64px] items-center rounded-2xl border bg-[#fafafa] px-5">
+                <Mail className="h-5 w-5 text-gray-500" />
 
                 <input
                   type="email"
+                  name="email"
+                  value={form.email}
+                  onChange={handleChange}
                   placeholder="example@email.com"
-                  className="ml-4 w-full bg-transparent text-[17px] outline-none"
+                  className="ml-4 w-full bg-transparent outline-none"
                 />
               </div>
             </div>
 
-            {/* OTP */}
-            {otpSent && (
-              <div>
-                <label className="mb-2 block text-[17px] font-medium text-[#111827]">
-                  Enter OTP
-                </label>
+            {/* USERNAME */}
+            <div>
+              <label className="mb-2 block text-[17px] font-medium">
+                Username
+              </label>
 
-                <div className="flex h-[64px] items-center rounded-2xl border border-[#d1d5db] bg-[#fafafa] px-5">
-                  <Shield className="h-5 w-5 text-[#6b7280]" />
+              <div className="flex h-[64px] items-center rounded-2xl border bg-[#fafafa] px-5">
+                <User className="h-5 w-5 text-gray-500" />
+
+                <input
+                  type="text"
+                  name="username"
+                  value={form.username}
+                  onChange={handleChange}
+                  placeholder="username"
+                  className="ml-4 w-full bg-transparent outline-none"
+                />
+              </div>
+            </div>
+
+            {/* PASSWORD */}
+<div>
+  <label className="mb-2 block text-[17px] font-medium">
+    Password
+  </label>
+
+  <div className="flex h-[64px] items-center rounded-2xl border bg-[#fafafa] px-5">
+    <KeyRound className="h-5 w-5 text-gray-500" />
+
+    <input
+      type="password"
+      name="password"
+      value={form.password}
+      onChange={handleChange}
+      placeholder="••••••••"
+      className="ml-4 w-full bg-transparent outline-none"
+    />
+  </div>
+</div>
+
+{/* CONFIRM PASSWORD */}
+<div>
+  <label className="mb-2 block text-[17px] font-medium">
+    Confirm Password
+  </label>
+
+  <div className="flex h-[64px] items-center rounded-2xl border bg-[#fafafa] px-5">
+    <KeyRound className="h-5 w-5 text-gray-500" />
+
+    <input
+      type="password"
+      name="confirmPassword"
+      value={form.confirmPassword}
+      onChange={handleChange}
+      placeholder="••••••••"
+      className="ml-4 w-full bg-transparent outline-none"
+    />
+  </div>
+</div>
+            {/* OTP SECTION */}
+            <div>
+              <label className="mb-2 block text-[17px] font-medium">
+                OTP Verification
+              </label>
+
+              <div className="flex gap-2">
+                <div className="flex flex-1 items-center rounded-2xl border bg-[#fafafa] px-4">
+                  <Shield className="h-5 w-5 text-gray-500" />
 
                   <input
                     type="text"
-                    placeholder="6-digit OTP"
-                    className="ml-4 w-full bg-transparent text-[17px] outline-none"
+                    name="otp"
+                    value={form.otp}
+                    onChange={handleChange}
+                    placeholder="Enter OTP"
+                    className="ml-3 h-[56px] w-full bg-transparent outline-none"
                   />
                 </div>
 
-                <p className="mt-2 text-sm text-[#6b7280]">
-                  OTP has been sent to your phone/email.
+                <button
+                  type="button"
+                  onClick={handleSendOtp}
+                  disabled={loading}
+                  className="rounded-2xl bg-blue-700 px-4 text-white hover:bg-blue-800"
+                >
+                  Get OTP
+                </button>
+
+                {otpSent && (
+                  <button
+                    type="button"
+                    onClick={handleVerifyOtp}
+                    disabled={loading}
+                    className="rounded-2xl bg-emerald-600 px-4 text-white hover:bg-emerald-700"
+                  >
+                    Validate
+                  </button>
+                )}
+              </div>
+
+              {otpVerified && (
+                <p className="mt-2 font-semibold text-green-500">
+                  OTP Matched ✓
                 </p>
+              )}
+            </div>
+
+
+            {error && (
+              <div className="rounded-xl bg-red-50 p-4 text-red-600">
+                {error}
               </div>
             )}
 
-            {/* PASSWORD */}
-            {otpSent && (
-              <div>
-                <label className="mb-2 block text-[17px] font-medium text-[#111827]">
-                  Create Password
-                </label>
-
-                <div className="flex h-[64px] items-center rounded-2xl border border-[#d1d5db] bg-[#fafafa] px-5">
-                  <KeyRound className="h-5 w-5 text-[#6b7280]" />
-
-                  <input
-                    type="password"
-                    placeholder="••••••••"
-                    className="ml-4 w-full bg-transparent text-[17px] outline-none"
-                  />
-                </div>
+            {success && (
+              <div className="rounded-xl bg-green-50 p-4 text-green-600">
+                {success}
               </div>
             )}
 
-            {/* BUTTON */}
-            {!otpSent ? (
-              <button
-                type="button"
-                onClick={() => setOtpSent(true)}
-                className="h-[64px] w-full rounded-2xl bg-blue-700 text-[20px] font-semibold text-white transition hover:bg-blue-800"
-              >
-                Get OTP
-              </button>
-            ) : (
-              <button
-                type="submit"
-                className="h-[64px] w-full rounded-2xl bg-emerald-600 text-[20px] font-semibold text-white transition hover:bg-emerald-700"
-              >
-                Complete Registration
-              </button>
-            )}
+            <button
+  type="submit"
+  disabled={loading}
+  className="h-[64px] w-full rounded-2xl bg-blue-700 text-[20px] font-semibold text-white hover:bg-blue-800"
+>
+  {loading
+    ? "Creating Account..."
+    : "Complete Registration"}
+</button>
 
-            {/* LOGIN */}
             <div className="pt-2 text-center">
               <span className="text-[#4b5563]">
                 Already have an account?
@@ -185,7 +479,6 @@ export default function RegisterPage() {
 
         <div className="absolute inset-0 bg-black/20" />
 
-        {/* INFO CARD */}
         <div className="absolute bottom-10 left-10 w-[480px] rounded-[28px] bg-white/95 p-8 shadow-2xl backdrop-blur-sm">
           <div className="mb-5 flex items-center gap-3">
             <div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-100">

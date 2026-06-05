@@ -15,11 +15,11 @@ export default function IncidentLogPage() {
         {/* TOP */}
         <div className="mb-6 flex items-start justify-between">
           <div>
-            <h2 className="text-[54px] font-bold tracking-tight text-[#111827]">
+            <h2 className="text-3xl font-bold tracking-tight text-gray-900">
               Nhật ký sự cố
             </h2>
 
-            <p className="mt-3 max-w-[320px] text-[18px] leading-[30px] text-[#6b7280]">
+            <p className="mt-3 text-xl text-gray-500">
               Xem lại các cảnh báo hệ thống và sự kiện y tế trước đây
             </p>
           </div>

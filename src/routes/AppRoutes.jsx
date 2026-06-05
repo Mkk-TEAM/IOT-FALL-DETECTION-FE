@@ -10,11 +10,14 @@ import LiveMonitor from "../pages/LiveMonitor";
 import DeviceManagement from "../pages/DeviceManagement";
 import Login from "../pages/Login.jsx";
 import Register from "../pages/Register.jsx";
+import ForgotPassword from "../pages/ForgotPass.jsx";
+import Notification from "../pages/NotificationPage.jsx";
 function AppRoutes() {
   return (
     <BrowserRouter>
         <Routes>
           <Route path="/login" element={<Login />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/register" element={<Register />} />
           <Route path="/*" element={
             <MainLayout>
@@ -23,6 +26,7 @@ function AppRoutes() {
                 <Route path="/incident" element={<IncidentLog />} />
                 <Route path="/health" element={<HealthTrends />} />
                 <Route path="/devices" element={<DeviceManagement />} />
+                <Route path="/chat" element={<Notification />} />
               </Routes>
             </MainLayout>
           } />
