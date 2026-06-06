@@ -16,7 +16,7 @@ export default function RegisterPage() {
   const [loading, setLoading] = useState(false);
 
   const [otpSent, setOtpSent] = useState(false);
-  const [otpVerified, setOtpVerified] = useState(false);
+  //const [otpVerified, setOtpVerified] = useState(false);
 
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
@@ -63,9 +63,9 @@ export default function RegisterPage() {
     try {
       setLoading(true);
 
-      await authApi.sendOtp({
+      await authApi.sendRegisterOtp({
+        phoneNumber: form.sdt,
         email: form.email,
-        sdt: form.sdt,
       });
 
       setOtpSent(true);
@@ -85,37 +85,37 @@ export default function RegisterPage() {
   // VERIFY OTP
   // =====================
 
-  const handleVerifyOtp = async () => {
-    setError("");
-    setSuccess("");
+  // const handleVerifyOtp = async () => {
+  //   setError("");
+  //   setSuccess("");
 
-    if (!form.otp) {
-      setError("Please enter OTP.");
-      return;
-    }
+  //   if (!form.otp) {
+  //     setError("Please enter OTP.");
+  //     return;
+  //   }
 
-    try {
-      setLoading(true);
+  //   try {
+  //     setLoading(true);
 
-      await authApi.verifyOtp({
-        email: form.email,
-        otp: form.otp,
-      });
+  //     await authApi.verifyOtp({
+  //       email: form.email,
+  //       otp: form.otp,
+  //     });
 
-      setOtpVerified(true);
+  //     setOtpVerified(true);
 
-      setSuccess("OTP Matched");
-    } catch (error) {
-      setOtpVerified(false);
+  //     setSuccess("OTP Matched");
+  //   } catch (error) {
+  //     setOtpVerified(false);
 
-      setError(
-        error?.response?.data?.message ||
-          "Invalid OTP."
-      );
-    } finally {
-      setLoading(false);
-    }
-  };
+  //     setError(
+  //       error?.response?.data?.message ||
+  //         "Invalid OTP."
+  //     );
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
 
   // =====================
   // REGISTER
@@ -171,20 +171,18 @@ export default function RegisterPage() {
   }
 
   // Chưa bấm Validate OTP
-  if (!otpVerified) {
-    setError("OTP chưa được xác thực hoặc không hợp lệ.");
-    return;
-  }
+  // if (!otpVerified) {
+  //   setError("OTP chưa được xác thực hoặc không hợp lệ.");
+  //   return;
+  // }
 
   try {
     setLoading(true);
 
     await authApi.register({
-      ho,
-      ten,
+      fullName: `${ho} ${ten}`,
+      phoneNumber: sdt,
       email,
-      sdt,
-      taikhoan: username,
       password,
       otp,
     });
@@ -408,24 +406,13 @@ export default function RegisterPage() {
                   disabled={loading}
                   className="rounded-2xl bg-blue-700 px-4 text-white hover:bg-blue-800"
                 >
-                  Get OTP
+                {loading ? "Sending..." : "Get OTP"}
                 </button>
-
-                {otpSent && (
-                  <button
-                    type="button"
-                    onClick={handleVerifyOtp}
-                    disabled={loading}
-                    className="rounded-2xl bg-emerald-600 px-4 text-white hover:bg-emerald-700"
-                  >
-                    Validate
-                  </button>
-                )}
               </div>
 
-              {otpVerified && (
-                <p className="mt-2 font-semibold text-green-500">
-                  OTP Matched ✓
+              {otpSent && (
+                <p className="mt-2 text-sm text-green-600">
+                  OTP has been sent to your email.
                 </p>
               )}
             </div>

@@ -1,36 +1,47 @@
 // src/routes/AppRoutes.jsx
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+
 import MainLayout from "../layout/MainLayout";
 
-//import Home from "../pages/Home";
-import IncidentLog from "../pages/IncidentLog";
-//import Dashboard from "../pages/Dashboard";
-import HealthTrends from "../pages/HealthTrends";
+import Home from "../pages/Home";
 import LiveMonitor from "../pages/LiveMonitor";
+import IncidentLog from "../pages/IncidentLog";
+import HealthTrends from "../pages/HealthTrends";
 import DeviceManagement from "../pages/DeviceManagement";
-import Login from "../pages/Login.jsx";
-import Register from "../pages/Register.jsx";
-import ForgotPassword from "../pages/ForgotPass.jsx";
-import Notification from "../pages/NotificationPage.jsx";
+
+import Login from "../pages/Login";
+import Register from "../pages/Register";
+import ForgotPassword from "../pages/ForgotPass";
+import Notification from "../pages/NotificationPage";
+
 function AppRoutes() {
   return (
     <BrowserRouter>
-        <Routes>
-          <Route path="/login" element={<Login />} />
-          <Route path="/forgot-password" element={<ForgotPassword />} />
-          <Route path="/register" element={<Register />} />
-          <Route path="/*" element={
-            <MainLayout>
-              <Routes>
-                <Route path="/" element={<LiveMonitor />} />
-                <Route path="/incident" element={<IncidentLog />} />
-                <Route path="/health" element={<HealthTrends />} />
-                <Route path="/devices" element={<DeviceManagement />} />
-                <Route path="/chat" element={<Notification />} />
-              </Routes>
-            </MainLayout>
-          } />
-        </Routes>
+      <Routes>
+
+        {/* Không có Header */}
+        <Route path="/login" element={<Login />} />
+        <Route path="/register" element={<Register />} />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
+
+        {/* Có Header + Footer */}
+        <Route element={<MainLayout />}>
+
+          <Route path="/" element={<Home />} />
+
+          <Route path="/live-monitor" element={<LiveMonitor />} />
+
+          <Route path="/incident-log" element={<IncidentLog />} />
+
+          <Route path="/health-trends" element={<HealthTrends />} />
+
+          <Route path="/device-management" element={<DeviceManagement />} />
+
+          <Route path="/notifications" element={<Notification />} />
+
+        </Route>
+
+      </Routes>
     </BrowserRouter>
   );
 }

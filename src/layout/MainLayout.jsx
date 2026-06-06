@@ -1,15 +1,18 @@
-// src/layouts/MainLayout.jsx
+// src/layout/MainLayout.jsx
 import Header from "./Header";
 import Footer from "./Footer";
+import { Outlet } from "react-router-dom";
 
-function MainLayout({ children }) {
+export default function MainLayout() {
   return (
     <>
       <Header />
-      <main>{children}</main>
+
+      <main className="min-h-screen">
+        <Outlet />
+      </main>
+
       <Footer />
     </>
   );
 }
-
-export default MainLayout;

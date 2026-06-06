@@ -1,22 +1,42 @@
+import {
+  Phone,
+  Lock,
+  Eye,
+  EyeOff,
+  Shield,
+} from "lucide-react";
+import {
+  Link,
+  useNavigate,
+} from "react-router-dom";
+import {
+  useState,
+  useContext,
+} from "react";
 
-import { Phone, Lock, Eye, EyeOff, Shield } from "lucide-react";
-import { Link, useNavigate } from "react-router-dom";
-import { useState } from "react";
 import logo from "../assets/logo.png";
 import { authApi } from "../api/authApi";
+import { AuthContext } from "../context/AuthContext";
 
 export default function LoginPage() {
   const navigate = useNavigate();
 
-  const [showPassword, setShowPassword] = useState(false);
+  const { login } = useContext(AuthContext);
 
-  const [loginForm, setLoginForm] = useState({
-    usernameOrGmail: "",
-    password: "",
-  });
+  const [showPassword, setShowPassword] =
+    useState(false);
 
-  const [loginError, setLoginError] = useState("");
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [loginForm, setLoginForm] =
+    useState({
+      phoneNumber: "",
+      password: "",
+    });
+
+  const [loginError, setLoginError] =
+    useState("");
+
+  const [isSubmitting, setIsSubmitting] =
+    useState(false);
 
   const handleChangeLogin = (e) => {
     const { name, value } = e.target;
@@ -32,46 +52,45 @@ export default function LoginPage() {
 
     setLoginError("");
 
-    if (!loginForm.usernameOrGmail || !loginForm.password) {
-      setLoginError("Please enter your account and password.");
+    if (
+      !loginForm.phoneNumber ||
+      !loginForm.password
+    ) {
+      setLoginError(
+        "Please enter your phone number and password."
+      );
       return;
     }
 
-    setIsSubmitting(true);
-
     try {
+      setIsSubmitting(true);
+
       const res = await authApi.login({
-        usernameOrGmail: loginForm.usernameOrGmail,
+        phoneNumber: loginForm.phoneNumber,
         password: loginForm.password,
       });
 
-      const { meta } = res.data || {};
-      const { token, userInfo } = meta || {};
+      console.log("LOGIN RESPONSE:", res.data);
 
-      if (token) {
-        localStorage.setItem("token", token);
-      }
+      const userInfo = res?.data?.meta?.userInfo;
 
-      if (userInfo) {
-        localStorage.setItem(
-          "user",
-          JSON.stringify(userInfo)
+      if (!userInfo) {
+        throw new Error(
+          "User information not found."
         );
       }
 
-      const role = userInfo?.role;
+      // lưu vào Context
+      login(userInfo);
 
-      if (role === "nhanvien") {
-        navigate("/admin/dashboard");
-      } else {
-        navigate("/");
-      }
+      navigate("/");
     } catch (error) {
-      const msg =
-        error?.response?.data?.message ||
-        "Login failed. Please check your credentials.";
+      console.error(error);
 
-      setLoginError(msg);
+      setLoginError(
+        error?.response?.data?.message ||
+          "Login failed. Please check your credentials."
+      );
     } finally {
       setIsSubmitting(false);
     }
@@ -79,14 +98,16 @@ export default function LoginPage() {
 
   return (
     <div className="grid min-h-screen grid-cols-1 overflow-hidden lg:grid-cols-2">
-
       {/* LEFT SIDE */}
       <div className="flex items-center justify-center bg-white px-8 py-12">
         <div className="w-full max-w-[420px]">
 
           {/* LOGO */}
           <div className="mb-20 flex items-center gap-4">
-            <Link to="/" className="flex items-center gap-4">
+            <Link
+              to="/"
+              className="flex items-center gap-4"
+            >
               <img
                 src={logo}
                 alt="logo"
@@ -115,10 +136,10 @@ export default function LoginPage() {
             className="space-y-8"
             onSubmit={handleLogin}
           >
-            {/* ACCOUNT */}
+            {/* PHONE */}
             <div>
               <label className="mb-3 block text-[18px] font-medium text-[#111827]">
-                Account / Email / Phone
+                Phone Number
               </label>
 
               <div className="flex h-[66px] items-center rounded-2xl border border-[#d1d5db] bg-[#fafafa] px-5 shadow-sm">
@@ -126,10 +147,10 @@ export default function LoginPage() {
 
                 <input
                   type="text"
-                  name="usernameOrGmail"
-                  value={loginForm.usernameOrGmail}
+                  name="phoneNumber"
+                  value={loginForm.phoneNumber}
                   onChange={handleChangeLogin}
-                  placeholder="Enter account"
+                  placeholder="Enter phone number"
                   className="ml-4 w-full bg-transparent text-[18px] outline-none placeholder:text-[#9ca3af]"
                 />
               </div>
@@ -145,7 +166,11 @@ export default function LoginPage() {
                 <Lock className="h-5 w-5 text-[#6b7280]" />
 
                 <input
-                  type={showPassword ? "text" : "password"}
+                  type={
+                    showPassword
+                      ? "text"
+                      : "password"
+                  }
                   name="password"
                   value={loginForm.password}
                   onChange={handleChangeLogin}
@@ -200,20 +225,11 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={isSubmitting}
-              className="h-[66px] w-full rounded-2xl bg-blue-700 text-[22px] font-semibold text-white shadow-md transition hover:bg-blue-800 disabled:cursor-not-allowed disabled:opacity-50"
+              className="h-[66px] w-full rounded-2xl bg-blue-700 text-[22px] font-semibold text-white shadow-md transition hover:bg-blue-800 disabled:opacity-50"
             >
               {isSubmitting
                 ? "Signing In..."
                 : "Sign In"}
-            </button>
-
-            {/* GUEST */}
-            <button
-              type="button"
-              onClick={() => navigate("/")}
-              className="h-[66px] w-full rounded-2xl border border-[#cfd4dc] bg-white text-[22px] font-medium text-[#1f3b82] transition hover:bg-gray-50"
-            >
-              Continue as Guest
             </button>
           </form>
 
@@ -229,10 +245,6 @@ export default function LoginPage() {
             <button className="font-semibold text-[#1f3b82] hover:underline">
               Contact administrator
             </button>
-          </div>
-
-          <div className="mt-28 text-[14px] uppercase tracking-wide text-[#9ca3af]">
-            VIGILANCE HEALTHCARE IOT. CLINICAL GRADE PRECISION.
           </div>
         </div>
       </div>
@@ -259,12 +271,12 @@ export default function LoginPage() {
           </div>
 
           <p className="text-[28px] leading-[44px] text-[#1f2937]">
-            Ensuring continuous, secure monitoring for resident
-            safety and caregiver peace of mind.
+            Ensuring continuous, secure monitoring
+            for resident safety and caregiver peace
+            of mind.
           </p>
         </div>
       </div>
     </div>
   );
 }
-

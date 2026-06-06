@@ -7,27 +7,25 @@ export const authApi = {
     return api.post("/auth/login", data);
   },
 
+  sendRegisterOtp(data) {
+    return api.post("/auth/register/otp", data);
+  },
+
   register(data) {
     return api.post("/auth/register", data);
   },
 
-  registerStaff(data) {
-    return api.post("/staff/register", data);
-  },
-
-  sendOtp(data) {
-    return api.post("/auth/send-otp", data);
-  },
-
-  verifyOtp(data) {
-    return api.post("/auth/verify-otp", data);
-  },
-
   verifyForgot(data) {
-    return api.post("/auth/forgot-password/verify", data);
+    return api.post(
+      "/auth/forgot-password/verify",
+      data
+    );
   },
 
   resetPassword(data) {
-    return api.post("/auth/forgot-password/reset", data);
+    return api.post(
+      "/auth/forgot-password/reset",
+      data
+    );
   },
 };
