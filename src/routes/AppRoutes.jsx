@@ -13,7 +13,7 @@ import Login from "../pages/Login";
 import Register from "../pages/Register";
 import ForgotPassword from "../pages/ForgotPass";
 import Notification from "../pages/NotificationPage";
-
+import Profile from "../pages/Profile";
 function AppRoutes() {
   return (
     <BrowserRouter>
@@ -38,6 +38,8 @@ function AppRoutes() {
           <Route path="/device-management" element={<DeviceManagement />} />
 
           <Route path="/notifications" element={<Notification />} />
+
+          <Route path="/profile" element={<Profile />} />
 
         </Route>
 
