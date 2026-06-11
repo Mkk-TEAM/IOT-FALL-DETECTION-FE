@@ -1,8 +1,11 @@
 // src/api/axiosClient.js
 import axios from "axios";
 
+const apiHost = window.location.hostname || "localhost";
+const apiProtocol = window.location.protocol || "http:";
+
 const api = axios.create({
-  baseURL: "http://localhost:3000", // đổi lại nếu backend dùng port khác
+  baseURL: `${apiProtocol}//${apiHost}:3000/api/v1`,
   headers: {
     "Content-Type": "application/json",
   },
