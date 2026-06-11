@@ -1,26 +1,45 @@
-# React + Vite
+# IoT Fall Detection Frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Frontend React + Vite cho hệ thống phát hiện té ngã. Trang `live-monitor`
+đã được nối sang MJPEG stream thật từ edge gateway.
 
-Currently, two official plugins are available:
+## Cài đặt
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+```bash
+npm install
+```
 
-## React Compiler
+## Cấu hình
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+Copy `.env.example` thành `.env.local` hoặc export biến môi trường trước khi
+chạy:
 
-## Expanding the ESLint configuration
+```env
+VITE_API_BASE_URL=http://192.168.1.10:3000/api/v1
+VITE_GATEWAY_ID=gw_001
+VITE_EDGE_STREAM_URL=http://192.168.1.10:8081/stream.mjpg
+VITE_EDGE_HEALTH_URL=http://192.168.1.10:8081/health
+VITE_EDGE_SNAPSHOT_URL=http://192.168.1.10:8081/snapshot.jpg
+```
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+- `VITE_GATEWAY_ID`: frontend gọi backend `GET /api/v1/streams/:gatewayId` để
+  lấy stream URL thật từ `gateway.ipAddress`.
+- `VITE_EDGE_STREAM_URL`: bỏ qua backend discovery và mở MJPEG trực tiếp.
 
+## Chạy dev server
 
-Install Tailwind
- npm install tailwindcss @tailwindcss/vite
-2'. Install Framer Motion
+```bash
+npm run dev -- --host 0.0.0.0
+```
 
-   npm install framer-motion lucide-react
-3. Start development server:
+Truy cập từ máy khác trong LAN:
 
-   npm run dev
+```text
+http://<FRONTEND_HOST_IP>:5173
+```
+
+## Ghi chú hiện trạng
+
+- `live-monitor` dùng MJPEG stream thật từ edge gateway.
+- `incident-log`, `notification`, `device-management` và một số health widget
+  khác vẫn còn là UI demo nếu chưa nối sang API thật.
