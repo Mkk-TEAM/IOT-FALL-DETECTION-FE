@@ -22,7 +22,7 @@ export default function DeviceManagementPage() {
       icon: <Camera className="h-6 w-6 text-blue-600" />,
       statusColor: "bg-green-100 text-green-600",
       signalIcon: <Wifi className="h-5 w-5 text-black" />,
-      action: "-",
+
     },
     {
       name: "Patient Wristband",
@@ -35,7 +35,7 @@ export default function DeviceManagementPage() {
       icon: <Watch className="h-6 w-6 text-blue-600" />,
       statusColor: "bg-green-100 text-green-600",
       signalIcon: <Bluetooth className="h-5 w-5 text-black" />,
-      action: "-",
+
     },
     {
       name: "Bathroom Fall Sensor",
@@ -48,7 +48,7 @@ export default function DeviceManagementPage() {
       icon: <Signal className="h-6 w-6 text-red-500" />,
       statusColor: "bg-red-100 text-red-500",
       signalIcon: <Wifi className="h-5 w-5 text-red-500" />,
-      action: "Reboot",
+
     },
   ];
 
@@ -85,9 +85,8 @@ export default function DeviceManagementPage() {
             <div>Trạng thái</div>
             <div>Pin</div>
             <div>Tín hiệu</div>
-            <div className="flex justify-between">
-              <span>Firmware</span>
-              <span>Actions</span>
+            <div>
+              Firmware
             </div>
           </div>
 
@@ -186,12 +185,7 @@ export default function DeviceManagementPage() {
                   {device.firmware}
                 </span>
 
-                {device.action !== "-" && (
-                  <button className="flex items-center gap-2 text-lg font-semibold text-red-500 hover:text-red-600">
-                    <RotateCcw className="h-5 w-5" />
-                    {device.action}
-                  </button>
-                )}
+                
               </div>
             </div>
           ))}

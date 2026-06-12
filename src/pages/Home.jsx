@@ -8,8 +8,11 @@ import {
   BarChart3,
   ArrowRight,
 } from "lucide-react";
+import { useContext } from "react";
+import { AuthContext } from "../context/AuthContext";
 
 export default function HomePage() {
+  const { user, logout } = useContext(AuthContext);
   return (
     <div className="bg-white">
 
@@ -32,7 +35,8 @@ export default function HomePage() {
               Hệ thống ElderCare IoT giúp theo dõi sức khỏe, phát hiện té ngã,
               gửi cảnh báo khẩn cấp và hỗ trợ chăm sóc người cao tuổi mọi lúc mọi nơi.
             </p>
-
+            {!user && (
+              <>
             <div className="mt-10 flex flex-wrap gap-4">
               <Link
                 to="/register"
@@ -48,6 +52,9 @@ export default function HomePage() {
                 Đăng nhập
               </Link>
             </div>
+            </>              
+            )}
+
           </div>
         </div>
       </section>
@@ -66,7 +73,7 @@ export default function HomePage() {
             </p>
           </div>
 
-          <div className="mt-16 grid gap-8 md:grid-cols-2 lg:grid-cols-3">
+          <div className="mt-16 grid gap-8 md:grid-cols-2 lg:grid-cols-2">
 
             <div className="rounded-2xl border p-8 shadow-sm">
               <Activity className="h-12 w-12 text-blue-600" />
@@ -85,26 +92,6 @@ export default function HomePage() {
               </h3>
               <p className="mt-3 text-gray-600">
                 Tự động phát hiện sự cố và gửi cảnh báo đến người chăm sóc.
-              </p>
-            </div>
-
-            <div className="rounded-2xl border p-8 shadow-sm">
-              <HeartPulse className="h-12 w-12 text-pink-500" />
-              <h3 className="mt-4 text-xl font-bold">
-                Theo dõi sức khỏe
-              </h3>
-              <p className="mt-3 text-gray-600">
-                Phân tích các chỉ số sinh tồn giúp phát hiện bất thường sớm.
-              </p>
-            </div>
-
-            <div className="rounded-2xl border p-8 shadow-sm">
-              <BarChart3 className="h-12 w-12 text-green-600" />
-              <h3 className="mt-4 text-xl font-bold">
-                Health Trends
-              </h3>
-              <p className="mt-3 text-gray-600">
-                Thống kê và hiển thị xu hướng sức khỏe theo ngày, tuần, tháng.
               </p>
             </div>
 
@@ -191,6 +178,8 @@ export default function HomePage() {
       </section>
 
       {/* CTA */}
+      {!user && (
+        <>
       <section className="bg-[#14B8A6] py-20 text-center text-white">
         <div className="mx-auto max-w-3xl px-6">
 
@@ -212,6 +201,7 @@ export default function HomePage() {
 
         </div>
       </section>
+      </>)}
     </div>
   );
 }

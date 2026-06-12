@@ -6,7 +6,6 @@ import MainLayout from "../layout/MainLayout";
 import Home from "../pages/Home";
 import LiveMonitor from "../pages/LiveMonitor";
 import IncidentLog from "../pages/IncidentLog";
-import HealthTrends from "../pages/HealthTrends";
 import DeviceManagement from "../pages/DeviceManagement";
 
 import Login from "../pages/Login";
@@ -32,8 +31,6 @@ function AppRoutes() {
           <Route path="/live-monitor" element={<LiveMonitor />} />
 
           <Route path="/incident-log" element={<IncidentLog />} />
-
-          <Route path="/health-trends" element={<HealthTrends />} />
 
           <Route path="/device-management" element={<DeviceManagement />} />
 

@@ -69,28 +69,21 @@ function Header() {
                   to="/live-monitor"
                   className={navClass}
                 >
-                  Live Monitor
+                  Giám sát trực tiếp
                 </NavLink>
 
                 <NavLink
                   to="/incident-log"
                   className={navClass}
                 >
-                  Incident Log
-                </NavLink>
-
-                <NavLink
-                  to="/health-trends"
-                  className={navClass}
-                >
-                  Health Trends
+                  Nhật ký sự cố
                 </NavLink>
 
                 <NavLink
                   to="/device-management"
                   className={navClass}
                 >
-                  Device Management
+                  Quản lý thiết bị
                 </NavLink>
               </>
             )}

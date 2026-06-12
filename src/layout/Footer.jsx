@@ -12,7 +12,7 @@ export default function HomeFooter() {
                     <div>
                         <h3 className="text-xl font-bold text-black">ElderCare IOT</h3>
                         <p className="mt-4 text-sm">
-CHƯA BIẾT                        </p>
+                            Công nghệ kết nối, dẫn lối bình an.</p>
                         <div className="mt-4 flex gap-3">
                             <button className="rounded-lg p-2 hover:bg-gray-800">
                                 <MapPin className="h-5 w-5" />
