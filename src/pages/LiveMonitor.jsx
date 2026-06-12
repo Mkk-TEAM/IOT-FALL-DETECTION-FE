@@ -1,15 +1,11 @@
 import {
-  Monitor,
-  ClipboardList,
-  TrendingUp,
-  Cpu,
-  Bell,
   Wifi,
   CheckCircle,
   Heart,
   Wind,
   Activity,
 } from "lucide-react";
+import LiveCameraStream from "../components/LiveCameraStream";
 
 export default function LiveMonitorPage() {
   return (
@@ -110,11 +106,7 @@ export default function LiveMonitorPage() {
           {/* CAMERA */}
           <div className="overflow-hidden rounded-3xl bg-black shadow-sm">
             <div className="relative h-full">
-              <img
-                src="https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?q=80&w=1400&auto=format&fit=crop"
-                alt="room"
-                className="h-full w-full object-cover opacity-80"
-              />
+              <LiveCameraStream />
 
               {/* LIVE */}
               <div className="absolute left-6 top-6 rounded-2xl bg-[#111827]/90 px-5 py-3 text-[18px] font-semibold text-white">

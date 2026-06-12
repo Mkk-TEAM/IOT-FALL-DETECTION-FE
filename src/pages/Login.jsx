@@ -72,13 +72,16 @@ export default function LoginPage() {
 
       console.log("LOGIN RESPONSE:", res.data);
 
-      const userInfo = res?.data?.meta?.userInfo;
+      const accessToken = res?.data?.data?.accessToken;
+      const userInfo = res?.data?.data?.user;
 
-      if (!userInfo) {
+      if (!accessToken || !userInfo) {
         throw new Error(
-          "User information not found."
+          "Login response is missing user information."
         );
       }
+
+      localStorage.setItem("token", accessToken);
 
       // lưu vào Context
       login(userInfo);
@@ -88,7 +91,8 @@ export default function LoginPage() {
       console.error(error);
 
       setLoginError(
-        error?.response?.data?.message ||
+        error?.response?.data?.error?.message ||
+          error?.response?.data?.message ||
           "Login failed. Please check your credentials."
       );
     } finally {
