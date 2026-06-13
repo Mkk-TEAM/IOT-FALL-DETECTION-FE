@@ -274,17 +274,17 @@ export default function IncidentLogPage() {
         {/* TOP */}
         <div className="mb-6 flex items-start justify-between">
           <div>
-            <h2 className="text-3xl font-bold tracking-tight text-gray-900">
+            <h2 className="text-2xl font-bold tracking-tight text-gray-900">
               Nhật ký sự cố
             </h2>
-            <p className="mt-3 text-xl text-gray-500">
+            <p className="mt-3 text-l text-gray-500">
               Xem lại các cảnh báo hệ thống và sự kiện y tế trước đây
             </p>
           </div>
-          <button className="flex h-[64px] items-center gap-3 rounded-[4px] border border-[#d1d5db] bg-white px-8 text-[18px] font-semibold shadow-sm transition hover:bg-gray-50">
+          {/* <button className="flex h-[64px] items-center gap-3 rounded-[4px] border border-[#d1d5db] bg-white px-8 text-[18px] font-semibold shadow-sm transition hover:bg-gray-50">
             <Download className="h-5 w-5" />
             Xuất nhật ký
-          </button>
+          </button> */}
         </div>
 
         {/* CONTENT */}

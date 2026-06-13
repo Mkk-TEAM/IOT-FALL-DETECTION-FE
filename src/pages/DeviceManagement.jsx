@@ -196,7 +196,6 @@ export default function DeviceManagementPage() {
                   <th className="px-6 py-4.5 pl-8">Thiết bị / ID</th>
                   <th className="px-6 py-4.5">Vị trí lắp đặt</th>
                   <th className="px-6 py-4.5">Trạng thái</th>
-                  <th className="px-6 py-4.5">Dung lượng Pin</th>
                   <th className="px-6 py-4.5">Tín hiệu mạng</th>
                   <th className="px-6 py-4.5">Tương tác cuối (Heartbeat)</th>
                 </tr>
@@ -242,7 +241,7 @@ export default function DeviceManagementPage() {
                       </td>
 
                       {/* Mức pin */}
-                      <td className="whitespace-nowrap px-6 py-4.5">
+                      {/* <td className="whitespace-nowrap px-6 py-4.5">
                         {device.batteryLevel !== null && device.batteryLevel !== undefined ? (
                           <div className="w-24">
                             <div className="flex items-center gap-1.5 font-semibold text-slate-700">
@@ -259,7 +258,7 @@ export default function DeviceManagementPage() {
                         ) : (
                           <span className="text-slate-400 text-xs italic">Nguồn điện trực tiếp (AC)</span>
                         )}
-                      </td>
+                      </td> */}
 
                       {/* Cường độ tín hiệu WiFi/Ble */}
                       <td className="whitespace-nowrap px-6 py-4.5">

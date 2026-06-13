@@ -121,7 +121,7 @@ export default function NotificationPage() {
         <div className="mb-8 flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
           <div>
             <h1 className="text-3xl font-bold tracking-tight text-slate-900 flex items-center gap-3">
-              <Bell className="h-8 w-8 text-blue-700" /> Nhật Ký Gửi Cảnh Báo
+              <Bell className="h-8 w-8 text-blue-700" /> Thông báo
             </h1>
             <p className="mt-2 text-base text-slate-500">
               Kiểm tra trạng thái điều phối dữ liệu cảnh báo thiết bị IoT tới người giám hộ và gia đình.
