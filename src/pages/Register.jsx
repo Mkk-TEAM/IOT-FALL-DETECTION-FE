@@ -230,11 +230,11 @@ export default function RegisterPage() {
           {/* TITLE */}
           <div className="mb-10">
             <h1 className="text-[48px] font-bold leading-tight text-[#111827]">
-              Create Account
+              Tạo tài khoản mới
             </h1>
 
             <p className="mt-3 text-[20px] text-[#4b5563]">
-              Register to access the healthcare monitoring system.
+              Đăng ký để truy cập hệ thống giám sát chăm sóc sức khỏe.
             </p>
           </div>
 
@@ -245,7 +245,7 @@ export default function RegisterPage() {
             {/* HỌ */}
             <div>
               <label className="mb-2 block text-[17px] font-medium">
-                Last Name
+                Họ
               </label>
 
               <div className="flex h-[64px] items-center rounded-2xl border bg-[#fafafa] px-5">
@@ -265,7 +265,7 @@ export default function RegisterPage() {
             {/* TÊN */}
             <div>
               <label className="mb-2 block text-[17px] font-medium">
-                First Name
+                Tên
               </label>
 
               <div className="flex h-[64px] items-center rounded-2xl border bg-[#fafafa] px-5">
@@ -285,7 +285,7 @@ export default function RegisterPage() {
             {/* PHONE */}
             <div>
               <label className="mb-2 block text-[17px] font-medium">
-                Phone Number
+                Số điện thoại
               </label>
 
               <div className="flex h-[64px] items-center rounded-2xl border bg-[#fafafa] px-5">
@@ -325,7 +325,7 @@ export default function RegisterPage() {
             {/* USERNAME */}
             <div>
               <label className="mb-2 block text-[17px] font-medium">
-                Username
+                Tên đăng nhập
               </label>
 
               <div className="flex h-[64px] items-center rounded-2xl border bg-[#fafafa] px-5">
@@ -336,55 +336,55 @@ export default function RegisterPage() {
                   name="username"
                   value={form.username}
                   onChange={handleChange}
-                  placeholder="username"
+                  placeholder="Nhập tên đăng nhập"
                   className="ml-4 w-full bg-transparent outline-none"
                 />
               </div>
             </div>
 
             {/* PASSWORD */}
-<div>
-  <label className="mb-2 block text-[17px] font-medium">
-    Password
-  </label>
+            <div>
+              <label className="mb-2 block text-[17px] font-medium">
+                Mật khẩu
+              </label>
 
-  <div className="flex h-[64px] items-center rounded-2xl border bg-[#fafafa] px-5">
-    <KeyRound className="h-5 w-5 text-gray-500" />
+              <div className="flex h-[64px] items-center rounded-2xl border bg-[#fafafa] px-5">
+                <KeyRound className="h-5 w-5 text-gray-500" />
 
-    <input
-      type="password"
-      name="password"
-      value={form.password}
-      onChange={handleChange}
-      placeholder="••••••••"
-      className="ml-4 w-full bg-transparent outline-none"
-    />
-  </div>
-</div>
+                <input
+                  type="password"
+                  name="password"
+                  value={form.password}
+                  onChange={handleChange}
+                  placeholder="••••••••"
+                  className="ml-4 w-full bg-transparent outline-none"
+                />
+              </div>
+            </div>
 
-{/* CONFIRM PASSWORD */}
-<div>
-  <label className="mb-2 block text-[17px] font-medium">
-    Confirm Password
-  </label>
+            {/* CONFIRM PASSWORD */}
+            <div>
+              <label className="mb-2 block text-[17px] font-medium">
+                Xác nhận Mật khẩu
+              </label>
 
-  <div className="flex h-[64px] items-center rounded-2xl border bg-[#fafafa] px-5">
-    <KeyRound className="h-5 w-5 text-gray-500" />
+              <div className="flex h-[64px] items-center rounded-2xl border bg-[#fafafa] px-5">
+                <KeyRound className="h-5 w-5 text-gray-500" />
 
-    <input
-      type="password"
-      name="confirmPassword"
-      value={form.confirmPassword}
-      onChange={handleChange}
-      placeholder="••••••••"
-      className="ml-4 w-full bg-transparent outline-none"
-    />
-  </div>
-</div>
+                <input
+                  type="password"
+                  name="confirmPassword"
+                  value={form.confirmPassword}
+                  onChange={handleChange}
+                  placeholder="••••••••"
+                  className="ml-4 w-full bg-transparent outline-none"
+                />
+              </div>
+            </div>
             {/* OTP SECTION */}
             <div>
               <label className="mb-2 block text-[17px] font-medium">
-                OTP Verification
+                Xác minh OTP
               </label>
 
               <div className="flex gap-2">
@@ -396,7 +396,7 @@ export default function RegisterPage() {
                     name="otp"
                     value={form.otp}
                     onChange={handleChange}
-                    placeholder="Enter OTP"
+                    placeholder="Nhập OTP"
                     className="ml-3 h-[56px] w-full bg-transparent outline-none"
                   />
                 </div>
@@ -407,13 +407,13 @@ export default function RegisterPage() {
                   disabled={loading}
                   className="rounded-2xl bg-blue-700 px-4 text-white hover:bg-blue-800"
                 >
-                {loading ? "Sending..." : "Get OTP"}
+                {loading ? "Đang gửi..." : "Lấy OTP"}
                 </button>
               </div>
 
               {otpSent && (
                 <p className="mt-2 text-sm text-green-600">
-                  OTP has been sent to your email.
+                  OTP đã được gửi đến email của bạn.
                 </p>
               )}
             </div>
@@ -432,25 +432,25 @@ export default function RegisterPage() {
             )}
 
             <button
-  type="submit"
-  disabled={loading}
-  className="h-[64px] w-full rounded-2xl bg-blue-700 text-[20px] font-semibold text-white hover:bg-blue-800"
->
-  {loading
-    ? "Creating Account..."
-    : "Complete Registration"}
-</button>
+              type="submit"
+              disabled={loading}
+              className="h-[64px] w-full rounded-2xl bg-blue-700 text-[20px] font-semibold text-white hover:bg-blue-800"
+            >
+              {loading
+                ? "Đang tạo tài khoản..."
+                : "Hoàn tất Đăng ký"}
+            </button>
 
             <div className="pt-2 text-center">
               <span className="text-[#4b5563]">
-                Already have an account?
+                Đã có tài khoản?{" "}
               </span>
 
               <Link
                 to="/login"
                 className="ml-2 font-semibold text-blue-700 hover:underline"
               >
-                Sign In
+                Đăng nhập ngay
               </Link>
             </div>
           </form>
@@ -474,12 +474,12 @@ export default function RegisterPage() {
             </div>
 
             <span className="text-sm font-bold uppercase tracking-[2px] text-blue-700">
-              Secure Registration
+              Đăng ký an toàn
             </span>
           </div>
 
           <p className="text-[24px] leading-[40px] text-[#1f2937]">
-            Your account is protected with OTP verification and secure healthcare authentication.
+            Tài khoản của bạn được bảo vệ bằng xác minh OTP và xác thực y tế an toàn.
           </p>
         </div>
       </div>

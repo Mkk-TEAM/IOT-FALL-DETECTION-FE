@@ -11,7 +11,7 @@ import {
 import api from "../api/axiosClient";
 
 const TYPE_META = {
-  FALL:         { label: "Phát hiện ngã",  cls: "bg-red-100 text-red-600",       icon: "⚠" },
+  FALL:         { label: "Phát hiện ngã",   cls: "bg-red-100 text-red-600",     icon: "⚠" },
   INACTIVITY:   { label: "Không vận động", cls: "bg-yellow-100 text-yellow-700",  icon: "⌁" },
   DISCONNECT:   { label: "Mất kết nối",    cls: "bg-gray-100 text-gray-600",     icon: "⌁" },
   OUT_OF_RANGE: { label: "Ngoài phạm vi",  cls: "bg-purple-100 text-purple-600",  icon: "⌁" },
@@ -162,142 +162,109 @@ export default function IncidentLogPage() {
   const [loading, setLoading]       = useState(true);
   const [error, setError]           = useState(null);
   const [expandedId, setExpandedId] = useState(null);
+  
+  // Quản lý bộ lọc loại sự kiện
   const [activeTypes, setActiveTypes] = useState(
     () => new Set(FILTER_ITEMS.map((f) => f.type))
   );
 
-  const fetchEvents = useCallback(async (p) => {
+  // Quản lý bộ lọc thời gian
+  const [selectedDay, setSelectedDay] = useState(null);
+  const [currentDate, setCurrentDate] = useState(new Date());
+  const currentYear = currentDate.getFullYear();
+  const currentMonth = currentDate.getMonth();
+
+  // Hàm gọi API tích hợp đầy đủ bộ lọc từ Server
+  const fetchEvents = useCallback(async (p, typesFilter, dayFilter) => {
     setLoading(true);
     setError(null);
     try {
-      const res = await api.get("/events", {
-        params: { page: p, pageSize: PAGE_SIZE },
-      });
+      const params = { 
+        page: p, 
+        pageSize: PAGE_SIZE 
+      };
+
+      // 1. Chỉ truyền loại sự kiện nếu người dùng không chọn "Tất cả" 
+      // (Nếu Backend nhận 1 chuỗi đơn lẻ, cần xử lý hoặc lặp lại theo cấu trúc API của bạn)
+      if (typesFilter.size < FILTER_ITEMS.length) {
+        // Giả định API hỗ trợ lọc bằng mảng hoặc chuỗi. Nếu chỉ hỗ trợ 1 loại đơn lẻ:
+        if (typesFilter.size === 1) {
+          params.eventType = Array.from(typesFilter)[0];
+        }
+      }
+
+      // 2. Chuyển đổi ngày/tháng/năm sang ISOString dạng khoảng (from -> to) cho Backend parseDate
+      if (dayFilter) {
+        const fromDate = new Date(currentYear, currentMonth, dayFilter, 0, 0, 0, 0);
+        const toDate = new Date(currentYear, currentMonth, dayFilter, 23, 59, 59, 999);
+        params.from = fromDate.toISOString();
+        params.to = toDate.toISOString();
+      }
+
+      const res = await api.get("/events", { params });
+      
       setEvents(res.data.data ?? []);
       setMeta(res.data.meta ?? { page: p, pageSize: PAGE_SIZE, total: 0 });
     } catch (e) {
-      setError(
-        e.response?.data?.message ?? "Không thể tải dữ liệu. Vui lòng thử lại."
-      );
+      setError(e.response?.data?.message ?? "Không thể tải dữ liệu. Vui lòng thử lại.");
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [currentYear, currentMonth]);
 
+  // Kích hoạt fetch dữ liệu bất cứ khi nào phân trang hoặc bộ lọc thay đổi
   useEffect(() => {
-    fetchEvents(page);
-  }, [page, fetchEvents]);
+    fetchEvents(page, activeTypes, selectedDay);
+  }, [page, activeTypes, selectedDay, fetchEvents]);
 
-  const toggleType = (type) =>
+  // Toggle bộ lọc loại sự kiện & Reset về trang 1
+  const toggleType = (type) => {
     setActiveTypes((prev) => {
       const next = new Set(prev);
       next.has(type) ? next.delete(type) : next.add(type);
       return next;
     });
-
-  const visible = events.filter((event) => {
-    const matchType =
-      activeTypes.has(
-        event.eventType
-      );
-
-    if (!matchType)
-      return false;
-
-    if (!selectedDay)
-      return true;
-
-    const d = new Date(
-      event.timestamp
-    );
-
-    return (
-      d.getDate() ===
-        selectedDay &&
-      d.getMonth() ===
-        currentMonth &&
-      d.getFullYear() ===
-        currentYear
-    );
-  });
-
-  const totalPages = Math.ceil(meta.total / PAGE_SIZE) || 1;
-  const start      = (page - 1) * PAGE_SIZE + 1;
-  const end        = Math.min(page * PAGE_SIZE, meta.total);
-  const [showJumpInput, setShowJumpInput] =
-    useState(false);
-
-  const [jumpPage, setJumpPage] =
-    useState("");
-  const handleJumpPage = () => {
-    const targetPage = Number(jumpPage);
-
-    if (
-      targetPage >= 1 &&
-      targetPage <= totalPages
-    ) {
-      setPage(targetPage);
-    }
-
-    setShowJumpInput(false);
-    setJumpPage("");
+    setPage(1);
   };
-  const startItem =
-    meta.total === 0
-      ? 0
-      : (page - 1) * PAGE_SIZE + 1;
 
-  const endItem = Math.min(
-    page * PAGE_SIZE,
-    meta.total
-  );
-  // Calendar helpers (visual-only, shows current month)
-  //khởi tạo lịch
-  const [selectedDay, setSelectedDay] = useState(null);
-  const [currentDate, setCurrentDate] = useState(
-    new Date()
-  );
-  const currentYear = currentDate.getFullYear();
-  const currentMonth = currentDate.getMonth();
-
-  const firstDay = new Date(
-    currentYear,
-    currentMonth,
-    1).getDay();
-
-  const totalDays = new Date(
-    currentYear,
-    currentMonth + 1,
-    0).getDate();
-
-  const calendarDays = [
-  ...Array(firstDay).fill(null),
-  ...Array.from(
-    { length: totalDays },
-    (_, i) => i + 1
-  ),
-];
-//chuyển tháng
-  const changeMonth = (direction) => {
-  setCurrentDate(
-    (prev) =>
-      new Date(
-        prev.getFullYear(),
-        prev.getMonth() + direction,
-        1
-      )
-  );
-
-  // bỏ chọn ngày khi đổi tháng
-  setSelectedDay(null);
-};
+  // Click chọn ngày trên Lịch & Reset về trang 1
   const handleDayClick = (day) => {
     if (selectedDay === day) {
       setSelectedDay(null);
     } else {
       setSelectedDay(day);
     }
+    setPage(1);
+  };
 
+  // Phân trang helpers
+  const totalPages = Math.ceil(meta.total / PAGE_SIZE) || 1;
+  const startItem = meta.total === 0 ? 0 : (page - 1) * PAGE_SIZE + 1;
+  const endItem = Math.min(page * PAGE_SIZE, meta.total);
+
+  const [showJumpInput, setShowJumpInput] = useState(false);
+  const [jumpPage, setJumpPage] = useState("");
+
+  const handleJumpPage = () => {
+    const targetPage = Number(jumpPage);
+    if (targetPage >= 1 && targetPage <= totalPages) {
+      setPage(targetPage);
+    }
+    setShowJumpInput(false);
+    setJumpPage("");
+  };
+
+  // Logic vẽ giao diện Lịch
+  const firstDay = new Date(currentYear, currentMonth, 1).getDay();
+  const totalDays = new Date(currentYear, currentMonth + 1, 0).getDate();
+  const calendarDays = [
+    ...Array(firstDay).fill(null),
+    ...Array.from({ length: totalDays }, (_, i) => i + 1),
+  ];
+
+  const changeMonth = (direction) => {
+    setCurrentDate((prev) => new Date(prev.getFullYear(), prev.getMonth() + direction, 1));
+    setSelectedDay(null);
     setPage(1);
   };
 
@@ -326,13 +293,10 @@ export default function IncidentLogPage() {
           <div className="space-y-7">
             {/* DATE CARD */}
             <div className="rounded-2xl border border-[#dbe1ea] bg-white p-7 shadow-sm">
-
               {/* HEADER */}
               <div className="mb-6 flex items-center gap-3">
                 <CalendarDays className="h-6 w-6 text-[#4b5563]" />
-                <h3 className="text-[20px] font-semibold">
-                  Lọc theo ngày
-                </h3>
+                <h3 className="text-[20px] font-semibold">Lọc theo ngày</h3>
               </div>
 
               {/* MONTH */}
@@ -342,15 +306,11 @@ export default function IncidentLogPage() {
                   className="h-5 w-5 cursor-pointer text-[#6b7280]"
                 />
                 <span className="text-[18px] font-semibold">
-              {new Date(
-                currentYear,
-                currentMonth
-              ).toLocaleString("vi-VN", {
-                month: "long",
-                year: "numeric",
-              })}
-            </span>
-
+                  {new Date(currentYear, currentMonth).toLocaleString("vi-VN", {
+                    month: "long",
+                    year: "numeric",
+                  })}
+                </span>
                 <ChevronRight
                   onClick={() => changeMonth(1)}
                   className="h-5 w-5 cursor-pointer text-[#6b7280]"
@@ -359,14 +319,8 @@ export default function IncidentLogPage() {
 
               {/* WEEK HEADER */}
               <div className="grid grid-cols-7 gap-2 mb-3 text-center">
-
-                {[
-                  "Su","Mo","Tu","We","Th","Fr","Sa",
-                ].map((day) => (
-                  <div
-                    key={day}
-                    className="text-sm font-semibold text-gray-500"
-                  >
+                {["Su","Mo","Tu","We","Th","Fr","Sa"].map((day) => (
+                  <div key={day} className="text-sm font-semibold text-gray-500">
                     {day}
                   </div>
                 ))}
@@ -374,101 +328,62 @@ export default function IncidentLogPage() {
 
               {/* CALENDAR */}
               <div className="grid grid-cols-7 gap-2">
+                {calendarDays.map((day, index) => {
+                  if (!day) return <div key={index} className="h-12" />;
 
-              {calendarDays.map((day, index) => {
+                  const today = new Date();
+                  const isToday =
+                    day === today.getDate() &&
+                    currentMonth === today.getMonth() &&
+                    currentYear === today.getFullYear();
 
-                if (!day) {
-                  return (
-                    <div
-                      key={index}
-                      className="h-12"
-                    />
-                  );
-                }
+                  const isSelected = selectedDay === day;
 
-                const today = new Date();
-
-                const isToday =
-                  day === today.getDate() &&
-                  currentMonth === today.getMonth() &&
-                  currentYear === today.getFullYear();
-
-                const isSelected =
-                  selectedDay === day;
-
-                const incidentCount = events.filter((item) => {
-                  const d = new Date(item.timestamp);
+                  // Đánh dấu chấm xanh dưới ngày nếu có sự kiện (Có thể tối ưu thêm từ API riêng biệt nếu cần)
+                  const hasIncident = events.some((item) => {
+                    const d = new Date(item.timestamp);
+                    return (
+                      d.getDate() === day &&
+                      d.getMonth() === currentMonth &&
+                      d.getFullYear() === currentYear
+                    );
+                  });
 
                   return (
-                    d.getDate() === day &&
-                    d.getMonth() === currentMonth &&
-                    d.getFullYear() === currentYear
+                    <button
+                      key={day}
+                      onClick={() => handleDayClick(day)}
+                      className={`
+                        relative flex h-12 w-12 items-center justify-center rounded-xl transition-all
+                        ${isSelected ? "bg-blue-600 text-white shadow-lg" : ""}
+                        ${isToday && !isSelected ? "border-2 border-blue-600 font-bold" : ""}
+                        ${!isSelected ? "hover:bg-gray-100" : ""}
+                      `}
+                    >
+                      {day}
+                      {hasIncident && (
+                        <span
+                          className={`absolute bottom-1 h-1.5 w-1.5 rounded-full ${
+                            isSelected ? "bg-white" : "bg-blue-600"
+                          }`}
+                        />
+                      )}
+                    </button>
                   );
-                }).length;
-
-                return (
-                  <button
-                    key={day}
-                    onClick={() =>
-                      handleDayClick(day)
-                    }
-                    className={`
-                      relative flex h-12 w-12
-                      items-center justify-center
-                      rounded-xl transition-all
-
-                      ${
-                        isSelected
-                          ? "bg-blue-600 text-white shadow-lg"
-                          : ""
-                      }
-                      ${
-                        isToday && !isSelected
-                          ? "border-2 border-blue-600 font-bold"
-                          : ""
-                      }
-                      ${
-                        !isSelected
-                          ? "hover:bg-gray-100"
-                          : ""
-                      }
-                    `}
-                  >
-                    {day}
-
-                    {incidentCount > 0 && (
-                      <span
-                        className={`
-                          absolute bottom-1 h-1.5 w-1.5 rounded-full
-                          ${
-                            isSelected
-                              ? "bg-white"
-                              : "bg-blue-600"
-                          }
-                        `}
-                      />
-                    )}
-                  </button>
-                );
-              })}
-            </div>
+                })}
+              </div>
 
               {/* STATUS */}
               <div className="mt-6 rounded-xl bg-gray-50 p-3">
-
-                <p className="text-sm text-gray-600">
-                  Đang hiển thị:
-                </p>
-
+                <p className="text-sm text-gray-600">Đang hiển thị:</p>
                 <p className="mt-1 font-semibold text-gray-900">
                   {selectedDay
-                    ? `${selectedDay}/${
-                  currentMonth + 1
-                }/${currentYear}`
+                    ? `${selectedDay}/${currentMonth + 1}/${currentYear}`
                     : "Tất cả sự kiện"}
                 </p>
               </div>
             </div>
+
             {/* FILTER */}
             <div className="rounded-2xl border border-[#dbe1ea] bg-white p-7 shadow-sm">
               <div className="mb-8 flex items-center gap-3">
@@ -516,7 +431,7 @@ export default function IncidentLogPage() {
               <div className="px-7 py-16 text-center">
                 <p className="text-[17px] text-red-500">{error}</p>
                 <button
-                  onClick={() => fetchEvents(page)}
+                  onClick={() => fetchEvents(page, activeTypes, selectedDay)}
                   className="mt-4 rounded-xl border border-[#d1d5db] px-6 py-3 text-[16px] font-semibold hover:bg-gray-50"
                 >
                   Thử lại
@@ -525,7 +440,7 @@ export default function IncidentLogPage() {
             )}
 
             {/* EMPTY */}
-            {!loading && !error && visible.length === 0 && (
+            {!loading && !error && events.length === 0 && (
               <div className="px-7 py-16 text-center text-[17px] text-[#6b7280]">
                 Không có sự kiện nào
               </div>
@@ -534,14 +449,13 @@ export default function IncidentLogPage() {
             {/* ROWS */}
             {!loading &&
               !error &&
-              visible.map((event, idx) => {
-                const typeMeta =
-                  TYPE_META[event.eventType] ?? {
-                    label: event.eventType,
-                    cls: "bg-gray-100 text-gray-600",
-                    icon: "•",
-                  };
-                const isLast     = idx === visible.length - 1;
+              events.map((event, idx) => {
+                const typeMeta = TYPE_META[event.eventType] ?? {
+                  label: event.eventType,
+                  cls: "bg-gray-100 text-gray-600",
+                  icon: "•",
+                };
+                const isLast = idx === events.length - 1;
                 const isExpanded = expandedId === event.eventId;
 
                 return (
@@ -555,9 +469,7 @@ export default function IncidentLogPage() {
                     {/* ROW */}
                     <div
                       className="grid cursor-pointer grid-cols-[110px_120px_150px_180px_110px_1fr] items-center px-7 py-5 hover:bg-[#f0f7ff]"
-                      onClick={() =>
-                        setExpandedId(isExpanded ? null : event.eventId)
-                      }
+                      onClick={() => setExpandedId(isExpanded ? null : event.eventId)}
                     >
                       <PreviewCell snapshotUrl={event.snapshotUrl} />
 
@@ -575,9 +487,7 @@ export default function IncidentLogPage() {
                       </div>
 
                       <div>
-                        <span
-                          className={`rounded-lg px-4 py-2 text-[14px] font-semibold ${typeMeta.cls}`}
-                        >
+                        <span className={`rounded-lg px-4 py-2 text-[14px] font-semibold ${typeMeta.cls}`}>
                           {typeMeta.icon} {typeMeta.label}
                         </span>
                       </div>
@@ -608,130 +518,71 @@ export default function IncidentLogPage() {
             {/* FOOTER */}
             <div className="flex items-center justify-between border-t border-[#e5e7eb] bg-white px-7 py-5">
               <div className="text-[16px] text-[#6b7280]">
-                Có {startItem} đến {endItem}
-                {" "}trong số {meta.total} sự kiện
+                Có {startItem} đến {endItem} trong số {meta.total} sự kiện
               </div>
 
               <div className="flex items-center gap-2">
-
                 {/* PREV */}
                 <button
-                  onClick={() =>
-                    setPage((prev) =>
-                      Math.max(prev - 1, 1)
-                    )
-                  }
+                  onClick={() => setPage((prev) => Math.max(prev - 1, 1))}
                   disabled={page === 1}
-                  className="
-                    rounded-lg
-                    border
-                    px-4
-                    py-2
-                    disabled:opacity-40
-                  "
+                  className="rounded-lg border px-4 py-2 disabled:opacity-40"
                 >
                   Trước
                 </button>
 
                 {/* PAGE NUMBERS */}
                 <div className="flex items-center gap-2">
-
                   {totalPages <= 5 ? (
-                    Array.from(
-                      { length: totalPages },
-                      (_, i) => i + 1
-                    ).map((pageNum) => (
+                    Array.from({ length: totalPages }, (_, i) => i + 1).map((pageNum) => (
                       <button
                         key={pageNum}
-                        onClick={() =>
-                          setPage(pageNum)
-                        }
-                        className={`
-                          flex h-10 w-10
-                          items-center justify-center
-                          rounded-xl
-                          font-medium
-                          transition
-
-                          ${
-                            page === pageNum
-                              ? "bg-[#ff6b4a] text-white"
-                              : "hover:bg-gray-100"
-                          }
-                        `}
+                        onClick={() => setPage(pageNum)}
+                        className={`flex h-10 w-10 items-center justify-center rounded-xl font-medium transition ${
+                          page === pageNum ? "bg-[#ff6b4a] text-white" : "hover:bg-gray-100"
+                        }`}
                       >
                         {pageNum}
                       </button>
                     ))
                   ) : (
                     <>
-                      {/* page 1 */}
+                      {/* Trình bày thu gọn rút ngắn trang */}
                       <button
                         onClick={() => setPage(1)}
-                        className={`
-                          flex h-10 w-10
-                          items-center justify-center
-                          rounded-xl
-
-                          ${
-                            page === 1
-                              ? "bg-[#ff6b4a] text-white"
-                              : "hover:bg-gray-100"
-                          }
-                        `}
+                        className={`flex h-10 w-10 items-center justify-center rounded-xl ${
+                          page === 1 ? "bg-[#ff6b4a] text-white" : "hover:bg-gray-100"
+                        }`}
                       >
                         1
                       </button>
 
-                      {/* page 2 */}
-                      <button
-                        onClick={() => setPage(2)}
-                        className={`
-                          flex h-10 w-10
-                          items-center justify-center
-                          rounded-xl
+                      {totalPages > 2 && (
+                        <button
+                          onClick={() => setPage(2)}
+                          className={`flex h-10 w-10 items-center justify-center rounded-xl ${
+                            page === 2 ? "bg-[#ff6b4a] text-white" : "hover:bg-gray-100"
+                          }`}
+                        >
+                          2
+                        </button>
+                      )}
 
-                          ${
-                            page === 2
-                              ? "bg-[#ff6b4a] text-white"
-                              : "hover:bg-gray-100"
-                          }
-                        `}
-                      >
-                        2
-                      </button>
+                      {totalPages > 3 && (
+                        <button
+                          onClick={() => setPage(3)}
+                          className={`flex h-10 w-10 items-center justify-center rounded-xl ${
+                            page === 3 ? "bg-[#ff6b4a] text-white" : "hover:bg-gray-100"
+                          }`}
+                        >
+                          3
+                        </button>
+                      )}
 
-                      {/* page 3 */}
-                      <button
-                        onClick={() => setPage(3)}
-                        className={`
-                          flex h-10 w-10
-                          items-center justify-center
-                          rounded-xl
-
-                          ${
-                            page === 3
-                              ? "bg-[#ff6b4a] text-white"
-                              : "hover:bg-gray-100"
-                          }
-                        `}
-                      >
-                        3
-                      </button>
-
-                      {/* JUMP */}
                       {!showJumpInput ? (
                         <button
-                          onClick={() =>
-                            setShowJumpInput(true)
-                          }
-                          className="
-                            flex h-10 w-10
-                            items-center justify-center
-                            rounded-xl
-                            font-bold
-                            hover:bg-gray-100
-                          "
+                          onClick={() => setShowJumpInput(true)}
+                          className="flex h-10 w-10 items-center justify-center rounded-xl font-bold hover:bg-gray-100"
                         >
                           ...
                         </button>
@@ -742,46 +593,18 @@ export default function IncidentLogPage() {
                           min={1}
                           max={totalPages}
                           value={jumpPage}
-                          onChange={(e) =>
-                            setJumpPage(
-                              e.target.value
-                            )
-                          }
+                          onChange={(e) => setJumpPage(e.target.value)}
                           onBlur={handleJumpPage}
-                          onKeyDown={(e) => {
-                            if (
-                              e.key === "Enter"
-                            ) {
-                              handleJumpPage();
-                            }
-                          }}
-                          className="
-                            h-10
-                            w-16
-                            rounded-lg
-                            border
-                            text-center
-                            outline-none
-                          "
+                          onKeyDown={(e) => e.key === "Enter" && handleJumpPage()}
+                          className="h-10 w-16 rounded-lg border text-center outline-none"
                         />
                       )}
 
-                      {/* LAST PAGE */}
                       <button
-                        onClick={() =>
-                          setPage(totalPages)
-                        }
-                        className={`
-                          flex h-10 w-10
-                          items-center justify-center
-                          rounded-xl
-
-                          ${
-                            page === totalPages
-                              ? "bg-[#ff6b4a] text-white"
-                              : "hover:bg-gray-100"
-                          }
-                        `}
+                        onClick={() => setPage(totalPages)}
+                        className={`flex h-10 w-10 items-center justify-center rounded-xl ${
+                          page === totalPages ? "bg-[#ff6b4a] text-white" : "hover:bg-gray-100"
+                        }`}
                       >
                         {totalPages}
                       </button>
@@ -791,24 +614,9 @@ export default function IncidentLogPage() {
 
                 {/* NEXT */}
                 <button
-                  onClick={() =>
-                    setPage((prev) =>
-                      Math.min(
-                        prev + 1,
-                        totalPages
-                      )
-                    )
-                  }
-                  disabled={
-                    page === totalPages
-                  }
-                  className="
-                    rounded-lg
-                    border
-                    px-4
-                    py-2
-                    disabled:opacity-40
-                  "
+                  onClick={() => setPage((prev) => Math.min(prev + 1, totalPages))}
+                  disabled={page === totalPages}
+                  className="rounded-lg border px-4 py-2 disabled:opacity-40"
                 >
                   Sau
                 </button>

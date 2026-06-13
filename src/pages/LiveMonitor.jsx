@@ -140,9 +140,8 @@ export default function LiveMonitorPage() {
           </div>
 
           {/* CỘT PHẢI: CHỈ SỐ SỨC KHỎE (MỞ RỘNG) & LOG NHẬT KÝ */}
-          <div className="space-y-6">
+           {/* <div className="space-y-6">
             
-            {/*Nhật ký Log hệ thống (Lưu trữ 1 tháng - Tính năng MVP) */}
             <div className="rounded-3xl border border-[#e5e7eb] bg-white p-6 shadow-sm">
               <div className="mb-4 flex items-center justify-between">
                 <div className="flex items-center gap-2.5">
@@ -151,7 +150,6 @@ export default function LiveMonitorPage() {
                 </div>
               </div>
 
-              {/* Dòng sự kiện thời gian (Timeline) */}
               <div className="space-y-3.5 max-h-[190px] overflow-y-auto pr-1 text-[13.5px]">
                 <div className="flex gap-3 items-start">
                   <span className="font-mono text-gray-400 mt-0.5">21:15</span>
@@ -172,7 +170,7 @@ export default function LiveMonitorPage() {
               </div>
             </div>
 
-          </div>
+          </div>  */}
 
         </div>
       </main>

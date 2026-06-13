@@ -175,7 +175,7 @@ export default function ForgotPasswordPage() {
             {/* USERNAME / EMAIL */}
             <div>
               <label className="mb-2 block text-[17px] font-medium">
-                Phone Number
+                Số điện thoại đã đăng ký
               </label>
               <div className="flex h-[64px] items-center rounded-2xl border bg-[#fafafa] px-5">
                 {/* Bạn có thể giữ icon Mail hoặc đổi thành icon Phone */}
@@ -184,7 +184,7 @@ export default function ForgotPasswordPage() {
                   type="text"
                   name="phoneNumber" // <-- Đổi tên thuộc tính ở đây
                   value={form.phoneNumber} // <-- Cập nhật biến bind giá trị
-                  placeholder="Enter registered phone number"
+                  placeholder="Nhập số điện thoại đã đăng ký"
                   onChange={handleChange}
                   className="ml-4 w-full bg-transparent outline-none"
                 />
@@ -206,7 +206,7 @@ export default function ForgotPasswordPage() {
                     name="otp"
                     value={form.otp}
                     onChange={handleChange}
-                    placeholder="Enter OTP"
+                    placeholder="Nhập OTP"
                     className="ml-3 h-[56px] w-full bg-transparent outline-none"
                   />
                 </div>

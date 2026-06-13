@@ -52,7 +52,7 @@ export default function LoginPage() {
     setLoginError("");
 
     if (!loginForm.phoneNumber || !loginForm.password) {
-      setLoginError("Please enter your phone number and password.");
+      setLoginError("Hãy nhập số điện thoại và mật khẩu.");
       return;
     }
 
@@ -94,7 +94,7 @@ export default function LoginPage() {
       setLoginError(
         error?.response?.data?.message ||
         error?.message ||
-        "Login failed. Please check your credentials."
+        "Đăng nhập thất bại. Vui lòng kiểm tra thông tin đăng nhập."
       );
     } finally {
       setIsSubmitting(false);
@@ -128,11 +128,11 @@ export default function LoginPage() {
           {/* TITLE */}
           <div className="mb-10">
             <h1 className="text-[54px] font-bold leading-[60px] tracking-tight text-[#111827]">
-              Welcome Back
+              Chào mừng trở lại!
             </h1>
 
             <p className="mt-4 text-[22px] text-[#4b5563]">
-              Sign in to monitor your residents.
+              Đăng nhập để quan sát tình trạng người thân của bạn.
             </p>
           </div>
 
@@ -144,7 +144,7 @@ export default function LoginPage() {
             {/* PHONE */}
             <div>
               <label className="mb-3 block text-[18px] font-medium text-[#111827]">
-                Phone Number
+                Số điện thoại
               </label>
 
               <div className="flex h-[66px] items-center rounded-2xl border border-[#d1d5db] bg-[#fafafa] px-5 shadow-sm">
@@ -155,7 +155,7 @@ export default function LoginPage() {
                   name="phoneNumber"
                   value={loginForm.phoneNumber}
                   onChange={handleChangeLogin}
-                  placeholder="Enter phone number"
+                  placeholder="Nhập số điện thoại"
                   className="ml-4 w-full bg-transparent text-[18px] outline-none placeholder:text-[#9ca3af]"
                 />
               </div>
@@ -164,7 +164,7 @@ export default function LoginPage() {
             {/* PASSWORD */}
             <div>
               <label className="mb-3 block text-[18px] font-medium text-[#111827]">
-                Password
+                Mật khẩu
               </label>
 
               <div className="flex h-[66px] items-center rounded-2xl border border-[#d1d5db] bg-[#fafafa] px-5 shadow-sm">
@@ -208,14 +208,14 @@ export default function LoginPage() {
                   type="checkbox"
                   className="h-5 w-5 rounded border-gray-300 accent-blue-600"
                 />
-                Remember me
+                Ghi nhớ đăng nhập
               </label>
 
               <Link
                 to="/forgot-password"
                 className="text-[17px] font-medium text-blue-700 hover:underline"
               >
-                Forgot password?
+                Quên mật khẩu?
               </Link>
             </div>
 
@@ -233,8 +233,8 @@ export default function LoginPage() {
               className="h-[66px] w-full rounded-2xl bg-blue-700 text-[22px] font-semibold text-white shadow-md transition hover:bg-blue-800 disabled:opacity-50"
             >
               {isSubmitting
-                ? "Signing In..."
-                : "Sign In"}
+                ? "Đang đăng nhập..."
+                : "Đăng Nhập"}
             </button>
           </form>
 
@@ -244,12 +244,10 @@ export default function LoginPage() {
               to="/register"
               className="text-[#374151]"
             >
-              Don't have an account?
+              Không có tài khoản?{" "}
             </Link>
 
-            <button className="font-semibold text-[#1f3b82] hover:underline">
-              Contact administrator
-            </button>
+            
           </div>
         </div>
       </div>
@@ -271,14 +269,12 @@ export default function LoginPage() {
             </div>
 
             <span className="text-[16px] font-bold uppercase tracking-[2px] text-[#1f3b82]">
-              High-Reliability Mode
+              Chế độ độ tin cậy cao
             </span>
           </div>
 
           <p className="text-[28px] leading-[44px] text-[#1f2937]">
-            Ensuring continuous, secure monitoring
-            for resident safety and caregiver peace
-            of mind.
+            Hệ thống giám sát người cao tuổi với độ tin cậy cao, đảm bảo an toàn tối đa cho người thân của bạn.
           </p>
         </div>
       </div>
