@@ -15,6 +15,12 @@ export const authApi = {
     return api.post("/auth/register", data);
   },
 
+  sendForgotOtp(data) {
+    return api.post(
+      "/auth/forgot-password/otp",
+      data
+    );
+  },
   verifyForgot(data) {
     return api.post(
       "/auth/forgot-password/verify",

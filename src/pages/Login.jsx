@@ -49,16 +49,10 @@ export default function LoginPage() {
 
   const handleLogin = async (e) => {
     e.preventDefault();
-
     setLoginError("");
 
-    if (
-      !loginForm.phoneNumber ||
-      !loginForm.password
-    ) {
-      setLoginError(
-        "Please enter your phone number and password."
-      );
+    if (!loginForm.phoneNumber || !loginForm.password) {
+      setLoginError("Please enter your phone number and password.");
       return;
     }
 
@@ -70,26 +64,37 @@ export default function LoginPage() {
         password: loginForm.password,
       });
 
-      console.log("LOGIN RESPONSE:", res.data);
+      console.log("LOGIN RESPONSE FULL:", res);
 
-      const userInfo = res?.data?.meta?.userInfo;
+      // Cấu trúc chuẩn: Axios trả về phản hồi nằm trong thuộc tính .data
+      // Backend trả về kết quả nằm trong gói .data của JSON response
+      const responseData = res?.data?.data || res?.data; 
+      
+      // Lấy thông tin user (hoặc token tùy thuộc vào cơ chế AuthContext của bạn)
+      const userInfo = responseData?.user || responseData;
+      const token = responseData?.accessToken;
 
       if (!userInfo) {
-        throw new Error(
-          "User information not found."
-        );
+        throw new Error("User information not found in server response.");
       }
 
-      // lưu vào Context
+      // Nếu hệ thống cần lưu token vào localStorage, hãy thực hiện tại đây:
+      if (token) {
+        localStorage.setItem("accessToken", token);
+      }
+
+      // Lưu thông tin user vào Context trạng thái toàn cục
       login(userInfo);
 
+      // Điều hướng vào trang Dashboard chính
       navigate("/");
     } catch (error) {
-      console.error(error);
+      console.error("Login component error:", error);
 
       setLoginError(
         error?.response?.data?.message ||
-          "Login failed. Please check your credentials."
+        error?.message ||
+        "Login failed. Please check your credentials."
       );
     } finally {
       setIsSubmitting(false);

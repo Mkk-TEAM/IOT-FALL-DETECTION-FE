@@ -180,13 +180,14 @@ export default function RegisterPage() {
     setLoading(true);
 
     await authApi.register({
-      fullName: `${ho} ${ten}`,
+      username: username, // <-- BỔ SUNG DÒNG NÀY
+      fullName: `${ho.trim()} ${ten.trim()}`,
       phoneNumber: sdt,
-      email,
-      password,
-      otp,
+      email: email,
+      password: password,
+      otp: otp,
     });
-
+    setError("");
     setSuccess(
       "Đăng ký thành công. Đang chuyển sang đăng nhập..."
     );

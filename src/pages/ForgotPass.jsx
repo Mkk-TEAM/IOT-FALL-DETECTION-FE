@@ -28,8 +28,9 @@ export default function ForgotPasswordPage() {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
 
+  // Đổi tên trường từ usernameOrEmail thành phoneNumber cho chuẩn cấu trúc
   const [form, setForm] = useState({
-    usernameOrEmail: "",
+    phoneNumber: "",
     otp: "",
     newPassword: "",
     confirmPassword: "",
@@ -37,43 +38,34 @@ export default function ForgotPasswordPage() {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-
-    setForm((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
+    setForm((prev) => ({ ...prev, [name]: value }));
   };
 
   // =====================
-  // SEND OTP
+  // 1. SEND OTP
   // =====================
-
   const handleSendOtp = async () => {
     setError("");
     setSuccess("");
 
-    if (!form.usernameOrEmail) {
-      setError("Please enter username or email.");
+    if (!form.phoneNumber) {
+      setError("Vui lòng nhập số điện thoại.");
       return;
     }
 
     try {
       setLoading(true);
 
+      // Backend mong đợi object { phoneNumber }
       await authApi.sendForgotOtp({
-        usernameOrEmail:
-          form.usernameOrEmail,
+        phoneNumber: form.phoneNumber,
       });
 
       setOtpSent(true);
-
-      setSuccess(
-        "OTP has been sent successfully."
-      );
+      setSuccess("Mã OTP đã được gửi đến Email liên kết với số điện thoại này.");
     } catch (error) {
       setError(
-        error?.response?.data?.message ||
-          "Failed to send OTP."
+        error?.response?.data?.message || "Không thể gửi OTP. Vui lòng kiểm tra lại số điện thoại!"
       );
     } finally {
       setLoading(false);
@@ -81,117 +73,64 @@ export default function ForgotPasswordPage() {
   };
 
   // =====================
-  // VERIFY OTP
+  // 2. VALIDATE OTP (Xử lý Offline tại FrontEnd hoặc bỏ qua vì Backend sẽ check lúc Submit)
   // =====================
-
-  const handleVerifyOtp = async () => {
+  const handleVerifyOtp = () => {
     setError("");
     setSuccess("");
 
     if (!form.otp) {
-      setError("Please enter OTP.");
+      setError("Vui lòng nhập mã OTP.");
       return;
     }
 
-    try {
-      setLoading(true);
-
-      await authApi.verifyForgotOtp({
-        usernameOrEmail:
-          form.usernameOrEmail,
-        otp: form.otp,
-      });
-
-      setOtpVerified(true);
-
-      setSuccess("OTP Matched");
-    } catch (error) {
-      setOtpVerified(false);
-
-      setError(
-        error?.response?.data?.message ||
-          "Invalid OTP."
-      );
-    } finally {
-      setLoading(false);
-    }
+    // Vì backend gộp bước check OTP vào chung với bước Reset, 
+    // chúng ta sẽ đánh dấu tạm thời là true để người dùng nhập tiếp mật khẩu mới.
+    setOtpVerified(true);
+    setSuccess("Đã ghi nhận mã OTP. Vui lòng hoàn thành nhập mật khẩu mới.");
   };
 
   // =====================
-  // RESET PASSWORD
+  // 3. RESET PASSWORD
   // =====================
-
   const handleResetPassword = async (e) => {
     e.preventDefault();
-
     setError("");
     setSuccess("");
 
-    if (!form.usernameOrEmail) {
-      setError(
-        "Please enter username or email."
-      );
-      return;
-    }
-
-    if (!form.otp) {
-      setError("Please enter OTP.");
-      return;
-    }
-
-    if (!otpVerified) {
-      setError(
-        "OTP has not been verified."
-      );
-      return;
-    }
-
-    if (!form.newPassword) {
-      setError(
-        "Please enter new password."
-      );
+    if (!form.phoneNumber || !form.otp || !form.newPassword || !form.confirmPassword) {
+      setError("Vui lòng điền đầy đủ tất cả các trường dữ liệu.");
       return;
     }
 
     if (form.newPassword.length < 6) {
-      setError(
-        "Password must be at least 6 characters."
-      );
+      setError("Mật khẩu mới phải chứa ít nhất 6 ký tự.");
       return;
     }
 
-    if (
-      form.newPassword !==
-      form.confirmPassword
-    ) {
-      setError(
-        "Confirm password does not match."
-      );
+    if (form.newPassword !== form.confirmPassword) {
+      setError("Mật khẩu nhập lại không trùng khớp.");
       return;
     }
 
     try {
       setLoading(true);
 
+      // Gọi API reset mật khẩu gộp của Backend
       await authApi.resetPassword({
-        usernameOrEmail:
-          form.usernameOrEmail,
+        phoneNumber: form.phoneNumber,
         otp: form.otp,
-        newPassword:
-          form.newPassword,
+        newPassword: form.newPassword,
       });
 
-      setSuccess(
-        "Password reset successfully. Redirecting..."
-      );
+      setSuccess("Khôi phục mật khẩu thành công! Đang chuyển hướng về trang đăng nhập...");
 
       setTimeout(() => {
         navigate("/login");
       }, 1500);
     } catch (error) {
       setError(
-        error?.response?.data?.message ||
-          "Failed to reset password."
+        error?.response?.data?.message || "Khôi phục mật khẩu thất bại. OTP sai hoặc đã hết hạn."
       );
     } finally {
       setLoading(false);
@@ -221,11 +160,11 @@ export default function ForgotPasswordPage() {
 
           <div className="mb-10">
             <h1 className="text-[48px] font-bold">
-              Forgot Password
+              Quên mật khẩu
             </h1>
 
             <p className="mt-3 text-[20px] text-gray-600">
-              Recover your account securely.
+              Nhập thông tin để đặt lại mật khẩu của bạn.
             </p>
           </div>
 
@@ -236,17 +175,16 @@ export default function ForgotPasswordPage() {
             {/* USERNAME / EMAIL */}
             <div>
               <label className="mb-2 block text-[17px] font-medium">
-                Username or Email
+                Phone Number
               </label>
-
               <div className="flex h-[64px] items-center rounded-2xl border bg-[#fafafa] px-5">
-                <Mail className="h-5 w-5 text-gray-500" />
-
+                {/* Bạn có thể giữ icon Mail hoặc đổi thành icon Phone */}
+                <Mail className="h-5 w-5 text-gray-500" /> 
                 <input
                   type="text"
-                  name="usernameOrEmail"
-                  value={form.usernameOrEmail}
-                  placeholder="Enter account"
+                  name="phoneNumber" // <-- Đổi tên thuộc tính ở đây
+                  value={form.phoneNumber} // <-- Cập nhật biến bind giá trị
+                  placeholder="Enter registered phone number"
                   onChange={handleChange}
                   className="ml-4 w-full bg-transparent outline-none"
                 />
@@ -256,7 +194,7 @@ export default function ForgotPasswordPage() {
             {/* OTP */}
             <div>
               <label className="mb-2 block text-[17px] font-medium">
-                OTP Verification
+                Xác minh OTP
               </label>
 
               <div className="flex gap-2">
@@ -278,7 +216,7 @@ export default function ForgotPasswordPage() {
                   onClick={handleSendOtp}
                   className="rounded-2xl bg-blue-700 px-4 text-white"
                 >
-                  Get OTP
+                  Lấy OTP
                 </button>
 
                 {otpSent && (
@@ -287,7 +225,7 @@ export default function ForgotPasswordPage() {
                     onClick={handleVerifyOtp}
                     className="rounded-2xl bg-emerald-600 px-4 text-white"
                   >
-                    Validate
+                    Xác minh OTP
                   </button>
                 )}
               </div>
@@ -302,7 +240,7 @@ export default function ForgotPasswordPage() {
             {/* PASSWORD */}
             <div>
               <label className="mb-2 block text-[17px] font-medium">
-                New Password
+                Mật khẩu mới
               </label>
 
               <div className="flex h-[64px] items-center rounded-2xl border bg-[#fafafa] px-5">
@@ -344,7 +282,7 @@ export default function ForgotPasswordPage() {
             {/* CONFIRM */}
             <div>
               <label className="mb-2 block text-[17px] font-medium">
-                Confirm Password
+                Xác nhận mật khẩu
               </label>
 
               <div className="flex h-[64px] items-center rounded-2xl border bg-[#fafafa] px-5">
@@ -403,7 +341,7 @@ export default function ForgotPasswordPage() {
               type="submit"
               className="h-[64px] w-full rounded-2xl bg-blue-700 text-[20px] font-semibold text-white hover:bg-blue-800"
             >
-              Reset Password
+              Đặt lại mật khẩu
             </button>
 
             <div className="text-center">
@@ -411,7 +349,7 @@ export default function ForgotPasswordPage() {
                 to="/login"
                 className="font-semibold text-blue-700 hover:underline"
               >
-                Back to Login
+                Quay lại đăng nhập
               </Link>
             </div>
           </form>
