@@ -16,6 +16,91 @@ import {
 } from "lucide-react";
 import { deviceApi } from "../api/deviceApi";
 
+// ================= MOCK DATA (DỮ LIỆU GIẢ LẬP) =================
+const MOCK_DEVICES = [
+  {
+    deviceId: "CAM-AI-402",
+    deviceType: "CAMERA",
+    gatewayId: "GW-ROOM-402",
+    displayName: "Camera Góc Trái",
+    location: "Phòng 402 - Góc tường trái",
+    status: "ONLINE",
+    signalStrength: -45, // dBm (Tốt)
+    lastHeartbeat: new Date(Date.now() - 1000 * 30).toISOString(), // 30 giây trước
+  },
+  {
+    deviceId: "IMU-FALL-01",
+    deviceType: "FALL_SENSOR",
+    gatewayId: "GW-ROOM-402",
+    displayName: "Cảm Biến Ngã Khối Vuông",
+    location: "Phòng 402 - Giữa nhà",
+    status: "OFFLINE",
+    signalStrength: null, // Không có sóng
+    lastHeartbeat: new Date(Date.now() - 1000 * 60 * 60 * 2).toISOString(), // 2 tiếng trước
+  },
+  {
+    deviceId: "WB-HEALTH-99",
+    deviceType: "WRISTBAND",
+    gatewayId: "GW-ROOM-405",
+    displayName: "Vòng Đeo Tay Đo Nhịp Tim",
+    location: "Phòng 405 - Đang đeo",
+    status: "ONLINE",
+    signalStrength: -75, // Trung bình
+    lastHeartbeat: new Date().toISOString(), // Vừa xong
+  },
+  {
+    deviceId: "CAM-AI-405",
+    deviceType: "CAMERA",
+    gatewayId: "GW-ROOM-405",
+    displayName: "Camera Hành Lang",
+    location: "Hành lang lầu 4",
+    status: "DISABLED",
+    signalStrength: -90, // Yếu
+    lastHeartbeat: new Date(Date.now() - 1000 * 60 * 60 * 24).toISOString(), // 1 ngày trước
+  },
+  {
+    deviceId: "UNKNOWN-01",
+    deviceType: "UNKNOWN",
+    gatewayId: "GW-ROOM-402",
+    displayName: "Thiết Bị Mới",
+    location: "Chưa cấu hình",
+    status: "REGISTERED",
+    signalStrength: -65,
+    lastHeartbeat: new Date(Date.now() - 1000 * 60 * 5).toISOString(),
+  }
+];
+
+const MOCK_LOGS = [
+  {
+    statusLogId: "log-1",
+    status: "ONLINE",
+    recordedAt: new Date().toISOString(),
+    statusMessage: "Heartbeat định kỳ hoạt động bình thường.",
+    batteryLevel: 85,
+    signalStrength: -45,
+    ipAddress: "192.168.1.45"
+  },
+  {
+    statusLogId: "log-2",
+    status: "OFFLINE",
+    recordedAt: new Date(Date.now() - 1000 * 60 * 15).toISOString(),
+    statusMessage: "Mất kết nối với Gateway đột ngột (Timeout).",
+    batteryLevel: 86,
+    signalStrength: -88,
+    ipAddress: "192.168.1.45"
+  },
+  {
+    statusLogId: "log-3",
+    status: "ONLINE",
+    recordedAt: new Date(Date.now() - 1000 * 60 * 120).toISOString(),
+    statusMessage: "Khởi động lại thiết bị thành công.",
+    batteryLevel: 90,
+    signalStrength: -50,
+    ipAddress: "192.168.1.45"
+  }
+];
+// ===============================================================
+
 export default function DeviceManagementPage() {
   const [devices, setDevices] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -25,7 +110,6 @@ export default function DeviceManagementPage() {
   const [filterType, setFilterType] = useState("");
   const [filterStatus, setFilterStatus] = useState("");
 
-  // ================= STATE CHO POPUP THÊM THIẾT BỊ =================
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [addForm, setAddForm] = useState({
@@ -36,13 +120,11 @@ export default function DeviceManagementPage() {
     location: "",
   });
 
-  // ================= STATE CHO POPUP CHI TIẾT THIẾT BỊ =================
   const [detailModalOpen, setDetailModalOpen] = useState(false);
   const [selectedDevice, setSelectedDevice] = useState(null);
   const [deviceLogs, setDeviceLogs] = useState([]);
   const [loadingLogs, setLoadingLogs] = useState(false);
 
-  // FETCH DỮ LIỆU CHÍNH
   const fetchDeviceData = async (targetPage = meta.page) => {
     try {
       setLoading(true);
@@ -54,12 +136,13 @@ export default function DeviceManagementPage() {
         ...(filterType && { type: filterType }),
         ...(filterStatus && { status: filterStatus }),
       };
+      
       const deviceRes = await deviceApi.getDevices(deviceParams);
       const deviceData = deviceRes?.data?.data || deviceRes?.data;
 
-      if (deviceData && deviceData.items) {
+      // KIỂM TRA: Nếu API trả về dữ liệu thật thì dùng, nếu rỗng thì dùng MOCK_DEVICES
+      if (deviceData && deviceData.items && deviceData.items.length > 0) {
         let fetchedItems = deviceData.items;
-
         try {
           const logRes = await deviceApi.getLatestStatusLogs();
           const latestLogs = logRes?.data?.data || logRes?.data || [];
@@ -73,15 +156,23 @@ export default function DeviceManagementPage() {
             };
           });
         } catch (logErr) {
-          console.warn("Không thể tải thông tin tín hiệu mạng chi tiết:", logErr);
+          console.warn("Không tải được log mạng:", logErr);
         }
-
         setDevices(fetchedItems);
         setMeta(deviceData.meta);
+      } else {
+        // FALLBACK SANG MOCK DATA
+        console.warn("API trả về rỗng, đang hiển thị Mock Data...");
+        setDevices(MOCK_DEVICES);
+        setMeta({ page: 1, pageSize: 10, total: MOCK_DEVICES.length });
       }
+
     } catch (err) {
       console.error(err);
-      setError("Không thể đồng bộ danh sách thiết bị phần cứng.");
+      setError("Mất kết nối với máy chủ. Đang hiển thị dữ liệu giả lập (Mock Data).");
+      // FALLBACK KHI API BỊ LỖI (Ví dụ: chưa bật Backend)
+      setDevices(MOCK_DEVICES);
+      setMeta({ page: 1, pageSize: 10, total: MOCK_DEVICES.length });
     } finally {
       setLoading(false);
     }
@@ -91,9 +182,6 @@ export default function DeviceManagementPage() {
     fetchDeviceData(1);
   }, [filterType, filterStatus]);
 
-  // ================= HANDLER TƯƠNG TÁC =================
-
-  // 1. Thêm thiết bị
   const handleAddSubmit = async (e) => {
     e.preventDefault();
     try {
@@ -101,17 +189,22 @@ export default function DeviceManagementPage() {
       await deviceApi.createDevice(addForm);
       setIsAddModalOpen(false);
       setAddForm({ deviceId: "", deviceType: "CAMERA", gatewayId: "", displayName: "", location: "" });
-      fetchDeviceData(1); // Refresh list
+      fetchDeviceData(1);
     } catch (err) {
-      alert(err?.response?.data?.message || "Lỗi khi thêm thiết bị. Vui lòng kiểm tra lại ID/Gateway.");
+      alert(err?.response?.data?.message || "Lỗi khi thêm thiết bị từ BE. Vui lòng kiểm tra console.");
+      
+      // Nếu test mock, tự động nhét vào mảng UI để xem thử (Chỉ chạy khi Backend lỗi)
+      if (!err?.response) {
+        setDevices([{ ...addForm, status: "REGISTERED", lastHeartbeat: new Date().toISOString() }, ...devices]);
+        setIsAddModalOpen(false);
+      }
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  // 2. Xóa thiết bị
   const handleDelete = async (e, device) => {
-    e.stopPropagation(); // Ngăn không cho click lan ra thẻ <tr> để không mở popup chi tiết
+    e.stopPropagation(); 
     
     if (device.status === "ONLINE") {
       alert("Không thể xóa thiết bị đang ONLINE. Hãy vô hiệu hóa hoặc ngắt kết nối trước.");
@@ -121,31 +214,36 @@ export default function DeviceManagementPage() {
     if (window.confirm(`Bạn có chắc chắn muốn xóa thiết bị ${device.deviceId} vĩnh viễn không?`)) {
       try {
         await deviceApi.deleteDevice(device.deviceId);
-        fetchDeviceData(); // Refresh list
+        fetchDeviceData(); 
       } catch (err) {
         alert(err?.response?.data?.message || "Lỗi khi xóa thiết bị.");
+        // Chạy UI giả lập xóa nếu BE chưa có
+        if (!err?.response) setDevices(devices.filter(d => d.deviceId !== device.deviceId));
       }
     }
   };
 
-  // 3. Xem chi tiết trạng thái (Row Click)
   const handleRowClick = async (device) => {
     setSelectedDevice(device);
     setDetailModalOpen(true);
     try {
       setLoadingLogs(true);
-      // Gọi API lấy lịch sử log của riêng device này
       const res = await deviceApi.getDeviceStatusLogs({ deviceId: device.deviceId, pageSize: 10 });
       const logsData = res?.data?.data?.items || res?.data?.items || [];
-      setDeviceLogs(logsData);
+      
+      if (logsData.length > 0) {
+        setDeviceLogs(logsData);
+      } else {
+        setDeviceLogs(MOCK_LOGS); // Dùng Mock Logs nếu BE rỗng
+      }
     } catch (err) {
       console.error("Lỗi tải chi tiết log:", err);
+      setDeviceLogs(MOCK_LOGS); // Fallback khi lỗi
     } finally {
       setLoadingLogs(false);
     }
   };
 
-  // ================= UI HELPERS =================
   const getDeviceIcon = (type) => {
     switch (type) {
       case "CAMERA": return <Camera className="h-5 w-5 text-blue-600" />;
@@ -181,7 +279,6 @@ export default function DeviceManagementPage() {
     <div className="min-h-screen bg-[#f8fafc] px-6 py-10 relative">
       <div className="mx-auto max-w-7xl">
         
-        {/* TOP BAR */}
         <div className="mb-8 flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
           <div>
             <h2 className="text-3xl font-bold tracking-tight text-slate-900">
@@ -208,7 +305,6 @@ export default function DeviceManagementPage() {
           </div>
         </div>
 
-        {/* CONTROLS & FILTERS */}
         <div className="mb-6 flex flex-wrap items-center gap-4 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
           <select
             value={filterType}
@@ -238,7 +334,6 @@ export default function DeviceManagementPage() {
 
         {error && <div className="mb-6 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-600">{error}</div>}
 
-        {/* DATATABLE */}
         <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
           <div className="overflow-x-auto">
             <table className="w-full border-collapse text-left text-sm">
@@ -311,7 +406,6 @@ export default function DeviceManagementPage() {
             </table>
           </div>
 
-          {/* PHÂN TRANG */}
           <div className="flex items-center justify-between border-t border-slate-200 bg-white px-6 py-4 text-sm text-slate-500">
             <div>
               Hiển thị <span className="font-semibold text-slate-800">{devices.length}</span> trên tổng số{" "}
@@ -319,7 +413,6 @@ export default function DeviceManagementPage() {
             </div>
           </div>
         </div>
-
       </div>
 
       {/* ================= MODAL THÊM THIẾT BỊ ================= */}
@@ -372,33 +465,33 @@ export default function DeviceManagementPage() {
 
       {/* ================= MODAL CHI TIẾT LOG THIẾT BỊ ================= */}
       {detailModalOpen && selectedDevice && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-6">
-          <div className="w-full max-w-4xl rounded-3xl bg-white shadow-2xl flex flex-col max-h-[85vh]">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-6 backdrop-blur-sm">
+          <div className="flex max-h-[85vh] w-full max-w-4xl flex-col rounded-3xl bg-white shadow-2xl">
             
             <div className="flex items-center justify-between border-b border-slate-200 px-8 py-5">
               <div>
                 <h3 className="text-xl font-bold text-slate-800">Chi tiết trạng thái: {selectedDevice.displayName || selectedDevice.deviceId}</h3>
-                <p className="text-sm text-slate-500 mt-1">Lịch sử tín hiệu và thông báo lỗi (10 lượt gần nhất)</p>
+                <p className="mt-1 text-sm text-slate-500">Lịch sử tín hiệu và thông báo lỗi (10 lượt gần nhất)</p>
               </div>
               <button onClick={() => setDetailModalOpen(false)} className="rounded-full bg-slate-100 p-2 hover:bg-slate-200"><X className="h-5 w-5 text-slate-600" /></button>
             </div>
 
-            <div className="flex-1 overflow-auto p-8 bg-slate-50">
+            <div className="flex-1 overflow-auto bg-slate-50 p-8">
               {loadingLogs ? (
                 <div className="flex justify-center py-10"><Loader2 className="h-8 w-8 animate-spin text-blue-500" /></div>
               ) : deviceLogs.length === 0 ? (
-                <div className="text-center py-10 text-slate-500">Chưa có lịch sử trạng thái cho thiết bị này.</div>
+                <div className="py-10 text-center text-slate-500">Chưa có lịch sử trạng thái cho thiết bị này.</div>
               ) : (
                 <div className="space-y-4">
                   {deviceLogs.map((log) => (
-                    <div key={log.statusLogId} className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm flex items-start gap-4">
+                    <div key={log.statusLogId} className="flex items-start gap-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
                       <div className="mt-1">
                         <ListRestart className="h-5 w-5 text-indigo-400" />
                       </div>
                       <div className="flex-1">
-                        <div className="flex justify-between items-center mb-2">
+                        <div className="mb-2 flex items-center justify-between">
                           <span className={`inline-flex items-center rounded border px-2 py-0.5 text-xs font-bold ${getStatusStyle(log.status)}`}>{log.status}</span>
-                          <span className="text-xs font-mono text-slate-400">{new Date(log.recordedAt).toLocaleString("vi-VN")}</span>
+                          <span className="font-mono text-xs text-slate-400">{new Date(log.recordedAt).toLocaleString("vi-VN")}</span>
                         </div>
                         <p className="text-sm font-medium text-slate-700">{log.statusMessage || "Ghi nhận Ping định kỳ bình thường."}</p>
                         <div className="mt-3 flex gap-4 text-xs text-slate-500">
