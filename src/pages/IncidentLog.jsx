@@ -170,7 +170,7 @@ export default function IncidentLogPage() {
 
       const res = await eventApi.getEvents(params);
       
-      setEvents(res.data.items ?? []);
+      setEvents(res.data.data ?? res.data.items ?? []);
       setMeta(res.data.meta ?? { page: p, pageSize: PAGE_SIZE, total: 0 });
     } catch (e) {
       console.log("CHI TIẾT LỖI TỪ BACKEND:", e.response);
