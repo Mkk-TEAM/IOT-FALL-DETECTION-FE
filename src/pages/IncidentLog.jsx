@@ -193,7 +193,7 @@ export default function IncidentLogPage() {
       // SỬA ĐỔI 2: Gọi hàm từ eventApi thay vì api.get
       const res = await eventApi.getEvents(params);
       
-      setEvents(res.data.items ?? []);
+      setEvents(res.data.data ?? res.data.items ?? []);
       setMeta(res.data.meta ?? { page: p, pageSize: PAGE_SIZE, total: 0 });
     } catch (e) {
       // IN RA CONSOLE ĐỂ TÌM LỖI
