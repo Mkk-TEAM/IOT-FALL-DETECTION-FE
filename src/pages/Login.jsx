@@ -23,20 +23,16 @@ export default function LoginPage() {
 
   const { login } = useContext(AuthContext);
 
-  const [showPassword, setShowPassword] =
-    useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
-  const [loginForm, setLoginForm] =
-    useState({
-      phoneNumber: "",
-      password: "",
-    });
+  const [loginForm, setLoginForm] = useState({
+    phoneNumber: "",
+    password: "",
+  });
 
-  const [loginError, setLoginError] =
-    useState("");
+  const [loginError, setLoginError] = useState("");
 
-  const [isSubmitting, setIsSubmitting] =
-    useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleChangeLogin = (e) => {
     const { name, value } = e.target;
@@ -66,27 +62,22 @@ export default function LoginPage() {
 
       console.log("LOGIN RESPONSE FULL:", res);
 
-      // Cấu trúc chuẩn: Axios trả về phản hồi nằm trong thuộc tính .data
-      // Backend trả về kết quả nằm trong gói .data của JSON response
       const responseData = res?.data?.data || res?.data; 
       
-      // Lấy thông tin user (hoặc token tùy thuộc vào cơ chế AuthContext của bạn)
       const userInfo = responseData?.user || responseData;
-      const token = responseData?.accessToken;
+      const token = responseData?.accessToken || responseData?.token; // Bắt cả 2 trường hợp tên biến
 
       if (!userInfo) {
         throw new Error("User information not found in server response.");
       }
 
-      // Nếu hệ thống cần lưu token vào localStorage, hãy thực hiện tại đây:
+      // SỬA ĐỔI QUAN TRỌNG: Dùng sessionStorage thay cho localStorage
       if (token) {
-        localStorage.setItem("accessToken", token);
+        sessionStorage.setItem("token", token);
       }
 
-      // Lưu thông tin user vào Context trạng thái toàn cục
       login(userInfo);
 
-      // Điều hướng vào trang Dashboard chính
       navigate("/");
     } catch (error) {
       console.error("Login component error:", error);
@@ -246,8 +237,6 @@ export default function LoginPage() {
             >
               Không có tài khoản?{" "}
             </Link>
-
-            
           </div>
         </div>
       </div>

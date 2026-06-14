@@ -2,15 +2,15 @@
 import axios from "axios";
 
 const api = axios.create({
-  baseURL: "http://localhost:3000/api/v1", // đổi lại nếu backend dùng port khác
+  baseURL: "http://localhost:3000/api/v1", 
   headers: {
     "Content-Type": "application/json",
   },
 });
 
-// Tự động gắn token vào header nếu có
 api.interceptors.request.use((config) => {
-  const token = localStorage.getItem("token");
+  // SỬA TẠI ĐÂY: Đổi localStorage thành sessionStorage
+  const token = sessionStorage.getItem("token"); 
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }

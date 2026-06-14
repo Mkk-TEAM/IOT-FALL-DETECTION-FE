@@ -3,15 +3,15 @@ import {
   CalendarDays,
   ChevronLeft,
   ChevronRight,
-  Download,
   Filter,
   CheckCircle2,
   RefreshCw,
 } from "lucide-react";
-import api from "../api/axiosClient";
+// SỬA ĐỔI 1: Import eventApi thay vì import trực tiếp axiosClient
+import eventApi from "../api/eventApi"; 
 
 const TYPE_META = {
-  FALL:         { label: "Phát hiện ngã",   cls: "bg-red-100 text-red-600",     icon: "⚠" },
+  FALL:         { label: "Phát hiện ngã",  cls: "bg-red-100 text-red-600",     icon: "⚠" },
   INACTIVITY:   { label: "Không vận động", cls: "bg-yellow-100 text-yellow-700",  icon: "⌁" },
   DISCONNECT:   { label: "Mất kết nối",    cls: "bg-gray-100 text-gray-600",     icon: "⌁" },
   OUT_OF_RANGE: { label: "Ngoài phạm vi",  cls: "bg-purple-100 text-purple-600",  icon: "⌁" },
@@ -163,19 +163,14 @@ export default function IncidentLogPage() {
   const [error, setError]           = useState(null);
   const [expandedId, setExpandedId] = useState(null);
   
-  // Quản lý bộ lọc loại sự kiện
-  const [activeTypes, setActiveTypes] = useState(
-    () => new Set(FILTER_ITEMS.map((f) => f.type))
-  );
+  const [activeType, setActiveType] = useState("");
 
-  // Quản lý bộ lọc thời gian
   const [selectedDay, setSelectedDay] = useState(null);
   const [currentDate, setCurrentDate] = useState(new Date());
   const currentYear = currentDate.getFullYear();
   const currentMonth = currentDate.getMonth();
 
-  // Hàm gọi API tích hợp đầy đủ bộ lọc từ Server
-  const fetchEvents = useCallback(async (p, typesFilter, dayFilter) => {
+  const fetchEvents = useCallback(async (p, typeFilter, dayFilter) => {
     setLoading(true);
     setError(null);
     try {
@@ -184,16 +179,10 @@ export default function IncidentLogPage() {
         pageSize: PAGE_SIZE 
       };
 
-      // 1. Chỉ truyền loại sự kiện nếu người dùng không chọn "Tất cả" 
-      // (Nếu Backend nhận 1 chuỗi đơn lẻ, cần xử lý hoặc lặp lại theo cấu trúc API của bạn)
-      if (typesFilter.size < FILTER_ITEMS.length) {
-        // Giả định API hỗ trợ lọc bằng mảng hoặc chuỗi. Nếu chỉ hỗ trợ 1 loại đơn lẻ:
-        if (typesFilter.size === 1) {
-          params.eventType = Array.from(typesFilter)[0];
-        }
+      if (typeFilter) {
+        params.eventType = typeFilter;
       }
 
-      // 2. Chuyển đổi ngày/tháng/năm sang ISOString dạng khoảng (from -> to) cho Backend parseDate
       if (dayFilter) {
         const fromDate = new Date(currentYear, currentMonth, dayFilter, 0, 0, 0, 0);
         const toDate = new Date(currentYear, currentMonth, dayFilter, 23, 59, 59, 999);
@@ -201,33 +190,30 @@ export default function IncidentLogPage() {
         params.to = toDate.toISOString();
       }
 
-      const res = await api.get("/events", { params });
+      // SỬA ĐỔI 2: Gọi hàm từ eventApi thay vì api.get
+      const res = await eventApi.getEvents(params);
       
-      setEvents(res.data.data ?? []);
+      setEvents(res.data.items ?? []);
       setMeta(res.data.meta ?? { page: p, pageSize: PAGE_SIZE, total: 0 });
     } catch (e) {
+      // IN RA CONSOLE ĐỂ TÌM LỖI
+      console.log("CHI TIẾT LỖI TỪ BACKEND:", e.response);
+
       setError(e.response?.data?.message ?? "Không thể tải dữ liệu. Vui lòng thử lại.");
     } finally {
       setLoading(false);
     }
   }, [currentYear, currentMonth]);
 
-  // Kích hoạt fetch dữ liệu bất cứ khi nào phân trang hoặc bộ lọc thay đổi
   useEffect(() => {
-    fetchEvents(page, activeTypes, selectedDay);
-  }, [page, activeTypes, selectedDay, fetchEvents]);
+    fetchEvents(page, activeType, selectedDay);
+  }, [page, activeType, selectedDay, fetchEvents]);
 
-  // Toggle bộ lọc loại sự kiện & Reset về trang 1
   const toggleType = (type) => {
-    setActiveTypes((prev) => {
-      const next = new Set(prev);
-      next.has(type) ? next.delete(type) : next.add(type);
-      return next;
-    });
+    setActiveType((prev) => (prev === type ? "" : type));
     setPage(1);
   };
 
-  // Click chọn ngày trên Lịch & Reset về trang 1
   const handleDayClick = (day) => {
     if (selectedDay === day) {
       setSelectedDay(null);
@@ -237,7 +223,6 @@ export default function IncidentLogPage() {
     setPage(1);
   };
 
-  // Phân trang helpers
   const totalPages = Math.ceil(meta.total / PAGE_SIZE) || 1;
   const startItem = meta.total === 0 ? 0 : (page - 1) * PAGE_SIZE + 1;
   const endItem = Math.min(page * PAGE_SIZE, meta.total);
@@ -254,7 +239,6 @@ export default function IncidentLogPage() {
     setJumpPage("");
   };
 
-  // Logic vẽ giao diện Lịch
   const firstDay = new Date(currentYear, currentMonth, 1).getDay();
   const totalDays = new Date(currentYear, currentMonth + 1, 0).getDate();
   const calendarDays = [
@@ -281,10 +265,6 @@ export default function IncidentLogPage() {
               Xem lại các cảnh báo hệ thống và sự kiện y tế trước đây
             </p>
           </div>
-          {/* <button className="flex h-[64px] items-center gap-3 rounded-[4px] border border-[#d1d5db] bg-white px-8 text-[18px] font-semibold shadow-sm transition hover:bg-gray-50">
-            <Download className="h-5 w-5" />
-            Xuất nhật ký
-          </button> */}
         </div>
 
         {/* CONTENT */}
@@ -339,7 +319,6 @@ export default function IncidentLogPage() {
 
                   const isSelected = selectedDay === day;
 
-                  // Đánh dấu chấm xanh dưới ngày nếu có sự kiện (Có thể tối ưu thêm từ API riêng biệt nếu cần)
                   const hasIncident = events.some((item) => {
                     const d = new Date(item.timestamp);
                     return (
@@ -391,11 +370,27 @@ export default function IncidentLogPage() {
                 <h3 className="text-[20px] font-semibold">Event Type</h3>
               </div>
               <div className="space-y-5 text-[17px]">
+                {/* Tùy chọn "Tất cả" */}
+                <label className="flex cursor-pointer items-center gap-4">
+                  <input
+                    type="radio"
+                    name="eventType"
+                    checked={activeType === ""}
+                    onChange={() => {
+                      setActiveType("");
+                      setPage(1);
+                    }}
+                    className="h-5 w-5 accent-blue-600"
+                  />
+                  Tất cả
+                </label>
+                {/* Các bộ lọc theo mảng */}
                 {FILTER_ITEMS.map(({ type, label }) => (
                   <label key={type} className="flex cursor-pointer items-center gap-4">
                     <input
-                      type="checkbox"
-                      checked={activeTypes.has(type)}
+                      type="radio"
+                      name="eventType"
+                      checked={activeType === type}
                       onChange={() => toggleType(type)}
                       className="h-5 w-5 accent-blue-600"
                     />
@@ -431,7 +426,7 @@ export default function IncidentLogPage() {
               <div className="px-7 py-16 text-center">
                 <p className="text-[17px] text-red-500">{error}</p>
                 <button
-                  onClick={() => fetchEvents(page, activeTypes, selectedDay)}
+                  onClick={() => fetchEvents(page, activeType, selectedDay)}
                   className="mt-4 rounded-xl border border-[#d1d5db] px-6 py-3 text-[16px] font-semibold hover:bg-gray-50"
                 >
                   Thử lại
@@ -547,7 +542,6 @@ export default function IncidentLogPage() {
                     ))
                   ) : (
                     <>
-                      {/* Trình bày thu gọn rút ngắn trang */}
                       <button
                         onClick={() => setPage(1)}
                         className={`flex h-10 w-10 items-center justify-center rounded-xl ${
