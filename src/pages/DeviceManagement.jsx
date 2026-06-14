@@ -120,7 +120,7 @@ export default function DeviceManagementPage() {
     }
   };
 
-  // Connection quality derived from heartbeat age + status (RTT-based: ONLINE = BLE connected)
+  // Ping quality from RTT jitter mean (sent by IMU heartbeat, stored in pingMs)
   const getConnectionQuality = (device) => {
     if (device.status !== "ONLINE") {
       return (
@@ -129,27 +129,32 @@ export default function DeviceManagementPage() {
         </span>
       );
     }
-    const ageMs = device.lastHeartbeat
-      ? Date.now() - new Date(device.lastHeartbeat).getTime()
-      : Infinity;
-
-    if (ageMs < 60_000) {
+    if (device.pingMs == null) {
+      // Camera or device that doesn't report RTT — just show ONLINE
       return (
         <span className="flex items-center gap-1.5 text-sm font-medium text-emerald-600">
-          <Signal className="h-4 w-4" /> Tốt ({Math.round(ageMs / 1000)}s trước)
+          <Signal className="h-4 w-4" /> Online
         </span>
       );
     }
-    if (ageMs < 300_000) {
+    const ms = Math.round(device.pingMs);
+    if (ms <= 60) {
+      return (
+        <span className="flex items-center gap-1.5 text-sm font-medium text-emerald-600">
+          <Signal className="h-4 w-4" /> Tốt ({ms} ms)
+        </span>
+      );
+    }
+    if (ms <= 200) {
       return (
         <span className="flex items-center gap-1.5 text-sm font-medium text-amber-600">
-          <Wifi className="h-4 w-4" /> Trung bình ({Math.round(ageMs / 60000)}p trước)
+          <Wifi className="h-4 w-4" /> Khá ({ms} ms)
         </span>
       );
     }
     return (
       <span className="flex items-center gap-1.5 text-sm font-medium text-rose-500">
-        <WifiOff className="h-4 w-4" /> Yếu (heartbeat cũ)
+        <WifiOff className="h-4 w-4" /> Yếu ({ms} ms)
       </span>
     );
   };
