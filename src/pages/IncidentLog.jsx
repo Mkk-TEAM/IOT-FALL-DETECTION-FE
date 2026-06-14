@@ -7,7 +7,6 @@ import {
   CheckCircle2,
   RefreshCw,
 } from "lucide-react";
-// SỬA ĐỔI 1: Import eventApi thay vì import trực tiếp axiosClient
 import eventApi from "../api/eventApi"; 
 
 const TYPE_META = {
@@ -48,66 +47,42 @@ function fmtDate(ts) {
   });
 }
 
-function PreviewCell({ snapshotUrl }) {
-  return (
-    <div className="relative h-[54px] w-[70px]">
-      {snapshotUrl && (
-        <img
-          src={snapshotUrl}
-          className="h-full w-full rounded-lg object-cover"
-          onError={(e) => {
-            e.currentTarget.style.display = "none";
-            e.currentTarget.nextElementSibling.style.display = "flex";
-          }}
-        />
-      )}
-      <div
-        className="h-full w-full items-center justify-center rounded-lg bg-[#1f2937] text-[22px] text-white"
-        style={{ display: snapshotUrl ? "none" : "flex" }}
-      >
-        📷
-      </div>
-    </div>
-  );
-}
-
 function ExpandedRow({ event, typeMeta, onClose }) {
   return (
-    <div className="border-t border-[#dbe1ea] px-7 py-6">
-      <div className="grid grid-cols-[1fr_250px] gap-6">
-        {/* VIDEO / SNAPSHOT */}
-        <div className="overflow-hidden rounded-2xl border-l-4 border-blue-600 bg-black">
+    <div className="border-t border-[#dbe1ea] bg-[#f8fbff] px-7 py-6">
+      <div className="grid grid-cols-[1fr_300px] gap-8">
+        {/* VIDEO KHU VỰC CHÍNH */}
+        <div className="overflow-hidden rounded-2xl border-l-4 border-blue-600 bg-black shadow-md">
           {event.relatedVideoUrl ? (
             <video
               src={event.relatedVideoUrl}
               controls
-              className="h-[350px] w-full"
+              autoPlay
+              className="h-[400px] w-full"
               style={{ background: "#000" }}
             />
           ) : event.snapshotUrl ? (
             <div className="relative">
               <img
                 src={event.snapshotUrl}
-                className="h-[350px] w-full object-cover opacity-80"
+                className="h-[400px] w-full object-cover opacity-80"
+                alt="Event Snapshot"
               />
-              <div className="absolute left-5 top-5 rounded-lg bg-black/70 px-4 py-1 text-[13px] font-medium text-white">
-                {event.device?.displayName ?? "Camera"}
-              </div>
             </div>
           ) : (
-            <div className="flex h-[350px] items-center justify-center text-[17px] text-[#6b7280]">
-              Không có video
+            <div className="flex h-[400px] items-center justify-center text-[17px] text-[#6b7280]">
+              Không có dữ liệu video cho sự kiện này
             </div>
           )}
         </div>
 
-        {/* NOTES */}
-        <div>
+        {/* THÔNG TIN CHI TIẾT & HÀNH ĐỘNG */}
+        <div className="flex flex-col">
           <div className="text-[13px] font-bold uppercase tracking-wide text-[#6b7280]">
-            Event Notes
+            Chi tiết ghi chú
           </div>
-          <div className="mt-3 rounded-xl bg-[#f3f4f6] p-5 text-[16px] leading-[30px] text-[#374151]">
-            {event.message || "Không có ghi chú."}
+          <div className="mt-3 rounded-xl border border-blue-100 bg-white p-5 text-[16px] leading-[26px] text-[#374151] shadow-sm">
+            {event.message || "Không có ghi chú hệ thống."}
           </div>
 
           <div className="mt-6 grid grid-cols-2 gap-5">
@@ -116,7 +91,7 @@ function ExpandedRow({ event, typeMeta, onClose }) {
                 Loại sự kiện
               </div>
               <div className="mt-3">
-                <span className={`rounded-lg px-3 py-1 text-[14px] font-semibold ${typeMeta.cls}`}>
+                <span className={`rounded-lg px-3 py-1.5 text-[14px] font-semibold shadow-sm ${typeMeta.cls}`}>
                   {typeMeta.label}
                 </span>
               </div>
@@ -132,21 +107,24 @@ function ExpandedRow({ event, typeMeta, onClose }) {
             </div>
           </div>
 
-          <div className="mt-7 flex gap-4">
+          {/* NÚT TẢI XUỐNG & ĐÓNG */}
+          <div className="mt-auto pt-8 flex flex-col gap-3">
             {event.relatedVideoUrl && (
               <a
                 href={event.relatedVideoUrl}
                 download
-                className="text-[16px] font-semibold text-blue-600 hover:underline"
+                target="_blank"
+                rel="noreferrer"
+                className="flex items-center justify-center rounded-xl bg-blue-600 px-5 py-3 text-[16px] font-semibold text-white shadow-md transition hover:bg-blue-700"
               >
-                Download Clip
+                ⬇ Tải Video Xuống
               </a>
             )}
             <button
               onClick={onClose}
-              className="rounded-xl border border-[#d1d5db] bg-white px-5 py-3 text-[16px] font-semibold transition hover:bg-gray-50"
+              className="flex items-center justify-center rounded-xl border border-[#d1d5db] bg-white px-5 py-3 text-[16px] font-semibold text-gray-700 shadow-sm transition hover:bg-gray-50"
             >
-              Đóng
+              Đóng chi tiết
             </button>
           </div>
         </div>
@@ -190,15 +168,12 @@ export default function IncidentLogPage() {
         params.to = toDate.toISOString();
       }
 
-      // SỬA ĐỔI 2: Gọi hàm từ eventApi thay vì api.get
       const res = await eventApi.getEvents(params);
       
       setEvents(res.data.items ?? []);
       setMeta(res.data.meta ?? { page: p, pageSize: PAGE_SIZE, total: 0 });
     } catch (e) {
-      // IN RA CONSOLE ĐỂ TÌM LỖI
       console.log("CHI TIẾT LỖI TỪ BACKEND:", e.response);
-
       setError(e.response?.data?.message ?? "Không thể tải dữ liệu. Vui lòng thử lại.");
     } finally {
       setLoading(false);
@@ -262,7 +237,7 @@ export default function IncidentLogPage() {
               Nhật ký sự cố
             </h2>
             <p className="mt-3 text-l text-gray-500">
-              Xem lại các cảnh báo hệ thống và sự kiện y tế trước đây
+              Xem lại các cảnh báo hệ thống và video sự kiện y tế trước đây
             </p>
           </div>
         </div>
@@ -273,13 +248,11 @@ export default function IncidentLogPage() {
           <div className="space-y-7">
             {/* DATE CARD */}
             <div className="rounded-2xl border border-[#dbe1ea] bg-white p-7 shadow-sm">
-              {/* HEADER */}
               <div className="mb-6 flex items-center gap-3">
                 <CalendarDays className="h-6 w-6 text-[#4b5563]" />
                 <h3 className="text-[20px] font-semibold">Lọc theo ngày</h3>
               </div>
 
-              {/* MONTH */}
               <div className="mb-6 flex items-center justify-between">
                 <ChevronLeft
                   onClick={() => changeMonth(-1)}
@@ -297,7 +270,6 @@ export default function IncidentLogPage() {
                 />
               </div>
 
-              {/* WEEK HEADER */}
               <div className="grid grid-cols-7 gap-2 mb-3 text-center">
                 {["Su","Mo","Tu","We","Th","Fr","Sa"].map((day) => (
                   <div key={day} className="text-sm font-semibold text-gray-500">
@@ -306,7 +278,6 @@ export default function IncidentLogPage() {
                 ))}
               </div>
 
-              {/* CALENDAR */}
               <div className="grid grid-cols-7 gap-2">
                 {calendarDays.map((day, index) => {
                   if (!day) return <div key={index} className="h-12" />;
@@ -352,7 +323,6 @@ export default function IncidentLogPage() {
                 })}
               </div>
 
-              {/* STATUS */}
               <div className="mt-6 rounded-xl bg-gray-50 p-3">
                 <p className="text-sm text-gray-600">Đang hiển thị:</p>
                 <p className="mt-1 font-semibold text-gray-900">
@@ -370,7 +340,6 @@ export default function IncidentLogPage() {
                 <h3 className="text-[20px] font-semibold">Event Type</h3>
               </div>
               <div className="space-y-5 text-[17px]">
-                {/* Tùy chọn "Tất cả" */}
                 <label className="flex cursor-pointer items-center gap-4">
                   <input
                     type="radio"
@@ -384,7 +353,6 @@ export default function IncidentLogPage() {
                   />
                   Tất cả
                 </label>
-                {/* Các bộ lọc theo mảng */}
                 {FILTER_ITEMS.map(({ type, label }) => (
                   <label key={type} className="flex cursor-pointer items-center gap-4">
                     <input
@@ -402,12 +370,10 @@ export default function IncidentLogPage() {
           </div>
 
           {/* TABLE */}
-          <div className="overflow-hidden rounded-2xl border border-[#dbe1ea] bg-white shadow-sm">
-            {/* HEADER */}
-            <div className="grid grid-cols-[110px_120px_150px_180px_110px_1fr] border-b border-[#e5e7eb] bg-[#f8fafc] px-7 py-5 text-[14px] font-bold uppercase tracking-wide text-[#6b7280]">
-              <div>Xem trước</div>
+          <div className="overflow-hidden rounded-2xl border border-[#dbe1ea] bg-white shadow-sm flex flex-col">
+            {/* HEADER - Bố cục chia 4 cột */}
+            <div className="grid grid-cols-[150px_1fr_150px_180px] border-b border-[#e5e7eb] bg-[#f8fafc] px-7 py-5 text-[14px] font-bold uppercase tracking-wide text-[#6b7280]">
               <div>Thời gian</div>
-              <div>Địa điểm</div>
               <div>Sự kiện</div>
               <div>Độ tin cậy</div>
               <div>Trạng thái</div>
@@ -442,82 +408,80 @@ export default function IncidentLogPage() {
             )}
 
             {/* ROWS */}
-            {!loading &&
-              !error &&
-              events.map((event, idx) => {
-                const typeMeta = TYPE_META[event.eventType] ?? {
-                  label: event.eventType,
-                  cls: "bg-gray-100 text-gray-600",
-                  icon: "•",
-                };
-                const isLast = idx === events.length - 1;
-                const isExpanded = expandedId === event.eventId;
+            {!loading && !error && (
+              <div className="flex-1 overflow-y-auto">
+                {events.map((event, idx) => {
+                  const typeMeta = TYPE_META[event.eventType] ?? {
+                    label: event.eventType,
+                    cls: "bg-gray-100 text-gray-600",
+                    icon: "•",
+                  };
+                  const isLast = idx === events.length - 1;
+                  const isExpanded = expandedId === event.eventId;
 
-                return (
-                  <div
-                    key={event.eventId}
-                    className={[
-                      isExpanded ? "bg-[#f8fbff]" : "",
-                      !isLast || isExpanded ? "border-b border-[#e5e7eb]" : "",
-                    ].join(" ")}
-                  >
-                    {/* ROW */}
+                  return (
                     <div
-                      className="grid cursor-pointer grid-cols-[110px_120px_150px_180px_110px_1fr] items-center px-7 py-5 hover:bg-[#f0f7ff]"
-                      onClick={() => setExpandedId(isExpanded ? null : event.eventId)}
+                      key={event.eventId}
+                      className={[
+                        isExpanded ? "bg-[#f8fbff]" : "",
+                        !isLast || isExpanded ? "border-b border-[#e5e7eb]" : "",
+                      ].join(" ")}
                     >
-                      <PreviewCell snapshotUrl={event.snapshotUrl} />
-
-                      <div>
-                        <div className="text-[17px] font-semibold">
-                          {fmtTime(event.timestamp)}
+                      {/* ROW CONTENT - Bố cục chia 4 cột tương ứng Header */}
+                      <div
+                        className="grid cursor-pointer grid-cols-[150px_1fr_150px_180px] items-center px-7 py-5 hover:bg-[#f0f7ff] transition-colors"
+                        onClick={() => setExpandedId(isExpanded ? null : event.eventId)}
+                      >
+                        <div>
+                          <div className="text-[17px] font-semibold text-[#111827]">
+                            {fmtTime(event.timestamp)}
+                          </div>
+                          <div className="mt-1 text-[14px] text-[#6b7280]">
+                            {fmtDate(event.timestamp)}
+                          </div>
                         </div>
-                        <div className="mt-1 text-[14px] text-[#6b7280]">
-                          {fmtDate(event.timestamp)}
+
+                        <div>
+                          <span className={`inline-flex rounded-lg px-4 py-2 text-[14px] font-semibold ${typeMeta.cls}`}>
+                            {typeMeta.icon} {typeMeta.label}
+                          </span>
+                        </div>
+
+                        <div className="text-[17px] font-medium text-[#4b5563]">
+                          {event.confidence != null
+                            ? `${Math.round(event.confidence * 100)}%`
+                            : "–"}
+                        </div>
+
+                        <div className="text-[16px] font-medium text-emerald-600">
+                          {STATUS_LABEL[event.status] ?? event.status}
                         </div>
                       </div>
 
-                      <div className="text-[17px]">
-                        {event.device?.displayName ?? "–"}
-                      </div>
-
-                      <div>
-                        <span className={`rounded-lg px-4 py-2 text-[14px] font-semibold ${typeMeta.cls}`}>
-                          {typeMeta.icon} {typeMeta.label}
-                        </span>
-                      </div>
-
-                      <div className="text-[17px]">
-                        {event.confidence != null
-                          ? `${Math.round(event.confidence * 100)}%`
-                          : "–"}
-                      </div>
-
-                      <div className="text-[17px]">
-                        {STATUS_LABEL[event.status] ?? event.status}
-                      </div>
+                      {/* EXPANDED SECTION */}
+                      {isExpanded && (
+                        <ExpandedRow
+                          event={event}
+                          typeMeta={typeMeta}
+                          onClose={(e) => {
+                            e.stopPropagation();
+                            setExpandedId(null);
+                          }}
+                        />
+                      )}
                     </div>
-
-                    {/* EXPANDED */}
-                    {isExpanded && (
-                      <ExpandedRow
-                        event={event}
-                        typeMeta={typeMeta}
-                        onClose={() => setExpandedId(null)}
-                      />
-                    )}
-                  </div>
-                );
-              })}
+                  );
+                })}
+              </div>
+            )}
 
             {/* FOOTER */}
-            <div className="flex items-center justify-between border-t border-[#e5e7eb] bg-white px-7 py-5">
+            <div className="flex items-center justify-between border-t border-[#e5e7eb] bg-white px-7 py-5 mt-auto">
               <div className="text-[16px] text-[#6b7280]">
                 Có {startItem} đến {endItem} trong số {meta.total} sự kiện
               </div>
 
               <div className="flex items-center gap-2">
-                {/* PREV */}
                 <button
                   onClick={() => setPage((prev) => Math.max(prev - 1, 1))}
                   disabled={page === 1}
@@ -526,7 +490,6 @@ export default function IncidentLogPage() {
                   Trước
                 </button>
 
-                {/* PAGE NUMBERS */}
                 <div className="flex items-center gap-2">
                   {totalPages <= 5 ? (
                     Array.from({ length: totalPages }, (_, i) => i + 1).map((pageNum) => (
@@ -606,7 +569,6 @@ export default function IncidentLogPage() {
                   )}
                 </div>
 
-                {/* NEXT */}
                 <button
                   onClick={() => setPage((prev) => Math.min(prev + 1, totalPages))}
                   disabled={page === totalPages}
