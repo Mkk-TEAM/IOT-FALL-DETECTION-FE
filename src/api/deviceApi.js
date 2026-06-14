@@ -1,16 +1,4 @@
-import axios from "axios";
-
-const API = axios.create({
-  baseURL: "http://localhost:5000/api", // Cấu hình URL Backend thực tế của bạn
-  timeout: 10000,
-});
-
-// Gắn token tự động giống bài trước
-API.interceptors.request.use((config) => {
-  const token = localStorage.getItem("accessToken");
-  if (token) config.headers.Authorization = `Bearer ${token}`;
-  return config;
-});
+import API from "./axiosClient";
 
 export const deviceApi = {
   // Gọi tới DeviceService.list

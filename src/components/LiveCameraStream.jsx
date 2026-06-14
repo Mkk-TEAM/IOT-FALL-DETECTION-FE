@@ -1,7 +1,11 @@
 import { useState } from "react";
 import { AlertCircle, RefreshCw } from "lucide-react";
 
-const STREAM_URL = import.meta.env.VITE_EDGE_STREAM_URL || "";
+const edgeHost = window.location.hostname || "localhost";
+const edgeProtocol = window.location.protocol || "http:";
+const STREAM_URL =
+  import.meta.env.VITE_EDGE_STREAM_URL ||
+  `${edgeProtocol}//${edgeHost}:8081/stream.mjpg`;
 
 export default function LiveCameraStream({
   className = "h-full w-full object-cover opacity-80",
@@ -13,17 +17,6 @@ export default function LiveCameraStream({
     setError(false);
     setKey((k) => k + 1);
   };
-
-  if (!STREAM_URL) {
-    return (
-      <div className="flex h-full w-full flex-col items-center justify-center gap-2 text-white/60">
-        <AlertCircle className="h-8 w-8" />
-        <span className="text-center text-sm">
-          VITE_EDGE_STREAM_URL chưa được cấu hình
-        </span>
-      </div>
-    );
-  }
 
   if (error) {
     return (

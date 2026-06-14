@@ -87,7 +87,7 @@ export default function DeviceManagementPage() {
       case "WRISTBAND":
       case "WATCH":
         return <Watch className="h-5 w-5 text-indigo-600" />;
-      case "FALL_SENSOR":
+      case "IMU":
         return <Activity className="h-5 w-5 text-orange-600" />;
       default:
         return <Cpu className="h-5 w-5 text-slate-600" />;
@@ -165,9 +165,9 @@ export default function DeviceManagementPage() {
             className="rounded-xl border border-slate-200 bg-slate-50 p-2.5 text-sm outline-none focus:border-blue-500 focus:bg-white transition"
           >
             <option value="">Tất cả phân loại (Device Type)</option>
-            <option value="CAMERA">CAMERA</option>
-            <option value="WRISTBAND">WRISTBAND (Vòng đeo tay)</option>
-            <option value="FALL_SENSOR">FALL_SENSOR (Cảm biến ngã)</option>
+            <option value="CAMERA">CAMERA (Camera)</option>
+            <option value="IMU">IMU (Cảm biến IMU)</option>
+            <option value="GATEWAY">GATEWAY (Cổng kết nối)</option>
           </select>
 
           <select
