@@ -1,35 +1,74 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   Wifi, WifiOff, CheckCircle, AlertTriangle,
   PhoneCall, HardDrive, RefreshCw, Cpu,
+  Video, PlayCircle, Clock,
 } from "lucide-react";
 import LiveCameraStream from "../components/LiveCameraStream";
 import api from "../api/axiosClient";
 
-// ── Hardcoded device list ─────────────────────────────────────────────────────
-const GATEWAY    = { gatewayId: "gw_001",  displayName: "Gateway phòng khách" };
-const CAMERA_DEV = { deviceId: "cam_001",  displayName: "Camera phòng khách" };
-const IMU_DEV    = { deviceId: "imu_001",  displayName: "Wristband IMU" };
+const GATEWAY_ID   = "gw_001";
+const STREAM_BASE  = `${window.location.protocol}//${window.location.hostname}:8081`;
+
+function useDevices() {
+  const [devices, setDevices] = useState([]);
+  useEffect(() => {
+    api.get("/devices", { params: { gatewayId: GATEWAY_ID } })
+      .then((res) => setDevices(res.data.data ?? []))
+      .catch(() => {});
+  }, []);
+  return devices;
+}
+
+function useClips() {
+  const [clips, setClips] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  const fetchClips = () => {
+    setLoading(true);
+    fetch(`${STREAM_BASE}/clips`)
+      .then((r) => r.json())
+      .then((d) => setClips(d.clips ?? []))
+      .catch(() => setClips([]))
+      .finally(() => setLoading(false));
+  };
+
+  useEffect(() => { fetchClips(); }, []);
+  return { clips, loading, refresh: fetchClips };
+}
+
+function fmtSize(bytes) {
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(0)} KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+}
+
+function fmtMtime(mtime) {
+  return new Date(mtime * 1000).toLocaleString("vi-VN", {
+    day: "2-digit", month: "2-digit", year: "numeric",
+    hour: "2-digit", minute: "2-digit",
+  });
+}
 
 export default function LiveMonitorPage() {
   const [latestFall, setLatestFall] = useState(null);
   const [loading, setLoading]       = useState(true);
+  const [playingClip, setPlayingClip] = useState(null);
+
+  const devices  = useDevices();
+  const { clips, loading: clipsLoading, refresh: refreshClips } = useClips();
+
+  const imuDevice    = devices.find((d) => d.deviceType === "IMU");
+  const cameraDevice = devices.find((d) => d.deviceType === "CAMERA");
+  const gateway      = { gatewayId: GATEWAY_ID, displayName: "Gateway phòng khách" };
 
   const fetchLatestFall = async () => {
     try {
-      const res = await api.get("/events", {
-        params: { gatewayId: GATEWAY.gatewayId, eventType: "FALL", pageSize: 1 },
-      });
+      const res   = await api.get("/events", { params: { gatewayId: GATEWAY_ID, eventType: "FALL", pageSize: 1 } });
       const items = res.data.data ?? res.data.items ?? [];
       const fall  = items[0] ?? null;
-      // Chỉ xét là cảnh báo nếu trong vòng 5 phút gần nhất
-      if (fall && Date.now() - new Date(fall.timestamp).getTime() < 5 * 60 * 1000) {
-        setLatestFall(fall);
-      } else {
-        setLatestFall(null);
-      }
-    } catch (e) {
-      console.error("LiveMonitor fetch error:", e);
+      setLatestFall(fall && Date.now() - new Date(fall.timestamp).getTime() < 5 * 60 * 1000 ? fall : null);
+    } catch {
+      // ignore
     } finally {
       setLoading(false);
     }
@@ -49,9 +88,7 @@ export default function LiveMonitorPage() {
 
         {/* TOPBAR */}
         <header className="flex h-[78px] items-center justify-between border-b border-[#e5e7eb] bg-white px-10">
-          <h2 className="text-[20px] font-semibold text-[#111827]">
-            {GATEWAY.displayName}
-          </h2>
+          <h2 className="text-[20px] font-semibold text-[#111827]">{gateway.displayName}</h2>
           <div className="flex items-center gap-3 text-[18px]">
             {loading ? (
               <RefreshCw className="h-5 w-5 animate-spin text-gray-400" />
@@ -69,12 +106,11 @@ export default function LiveMonitorPage() {
           </div>
         </header>
 
-        {/* CONTENT */}
+        {/* LIVE SECTION */}
         <div className="grid grid-cols-[280px_1fr_300px] gap-8 p-8">
 
           {/* CỘT TRÁI: trạng thái + thiết bị */}
           <div className="space-y-6">
-
             {isAlert ? (
               <div className="animate-pulse rounded-3xl bg-red-500 p-6 text-white shadow-lg">
                 <div className="mb-4 flex justify-center">
@@ -85,8 +121,7 @@ export default function LiveMonitorPage() {
                 <div className="text-center">
                   <div className="text-[22px] font-bold uppercase tracking-wide">Cảnh Báo!</div>
                   <div className="mt-2 text-[14px] text-white/90">
-                    Phát hiện ngã lúc{" "}
-                    {new Date(latestFall.timestamp).toLocaleTimeString("vi-VN")}
+                    Phát hiện ngã lúc {new Date(latestFall.timestamp).toLocaleTimeString("vi-VN")}
                   </div>
                   <div className="mt-4">
                     <button className="flex w-full items-center justify-center gap-2 rounded-xl bg-white py-2.5 text-[15px] font-bold text-red-600 shadow-sm hover:bg-gray-50">
@@ -112,7 +147,7 @@ export default function LiveMonitorPage() {
               </div>
             )}
 
-            {/* Danh sách thiết bị (hardcoded) */}
+            {/* Danh sách thiết bị từ DB */}
             <div className="rounded-3xl border border-[#e5e7eb] bg-white p-6 shadow-sm">
               <div className="mb-4 flex items-center gap-2 text-[16px] font-semibold text-[#111827]">
                 <Cpu className="h-5 w-5 text-blue-500" />
@@ -122,21 +157,33 @@ export default function LiveMonitorPage() {
                 <div className="flex items-center justify-between">
                   <span className="text-[#6b7280]">Cảm biến IMU</span>
                   <span className="rounded-lg bg-gray-100 px-2 py-0.5 text-[13px] font-medium">
-                    {IMU_DEV.displayName}
+                    {imuDevice?.displayName ?? "imu_001"}
                   </span>
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-[#6b7280]">Camera</span>
                   <span className="rounded-lg bg-gray-100 px-2 py-0.5 text-[13px] font-medium">
-                    {CAMERA_DEV.displayName}
+                    {cameraDevice?.displayName ?? "cam_001"}
                   </span>
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-[#6b7280]">Gateway</span>
                   <span className="rounded-lg bg-gray-100 px-2 py-0.5 text-[13px] font-medium">
-                    {GATEWAY.gatewayId}
+                    {gateway.gatewayId}
                   </span>
                 </div>
+                {imuDevice && (
+                  <div className="mt-2 flex items-center gap-1.5">
+                    <span className={`h-2 w-2 rounded-full ${imuDevice.status === "ONLINE" ? "bg-emerald-500" : "bg-rose-500"}`} />
+                    <span className="text-[13px] text-[#6b7280]">IMU: {imuDevice.status}</span>
+                  </div>
+                )}
+                {cameraDevice && (
+                  <div className="flex items-center gap-1.5">
+                    <span className={`h-2 w-2 rounded-full ${cameraDevice.status === "ONLINE" ? "bg-emerald-500" : "bg-rose-500"}`} />
+                    <span className="text-[13px] text-[#6b7280]">Camera: {cameraDevice.status}</span>
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -151,7 +198,7 @@ export default function LiveMonitorPage() {
               </div>
               <div className="absolute bottom-6 left-6 flex items-center gap-2 rounded-xl bg-black/70 px-4 py-2 text-[13px] text-white/90 backdrop-blur-sm">
                 <HardDrive className="h-4 w-4 text-sky-400" />
-                {CAMERA_DEV.displayName}
+                {cameraDevice?.displayName ?? "Camera"}
               </div>
             </div>
           </div>
@@ -168,9 +215,7 @@ export default function LiveMonitorPage() {
                 <div className="space-y-3 text-[14px]">
                   <div className="flex justify-between">
                     <span className="text-[#6b7280]">Loại</span>
-                    <span className="rounded-lg bg-red-100 px-2 py-0.5 font-semibold text-red-600">
-                      Phát hiện ngã
-                    </span>
+                    <span className="rounded-lg bg-red-100 px-2 py-0.5 font-semibold text-red-600">Phát hiện ngã</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-[#6b7280]">Thời gian</span>
@@ -178,26 +223,108 @@ export default function LiveMonitorPage() {
                   </div>
                   <div className="flex justify-between">
                     <span className="text-[#6b7280]">Độ tin cậy</span>
-                    <span>
-                      {latestFall.confidence != null
-                        ? `${Math.round(latestFall.confidence * 100)}%`
-                        : "–"}
-                    </span>
+                    <span>{latestFall.confidence != null ? `${Math.round(latestFall.confidence * 100)}%` : "–"}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-[#6b7280]">Trạng thái</span>
-                    <span>{latestFall.status}</span>
+                    <span className="text-[#6b7280]">Thiết bị</span>
+                    <span className="text-right max-w-[140px] truncate">{latestFall.device?.displayName ?? latestFall.deviceId ?? "–"}</span>
                   </div>
                 </div>
               ) : (
-                <p className="text-[14px] text-[#6b7280]">
-                  Không có sự kiện ngã trong 5 phút qua.
-                </p>
+                <p className="text-[14px] text-[#6b7280]">Không có sự kiện ngã trong 5 phút qua.</p>
               )}
             </div>
           </div>
 
         </div>
+
+        {/* VIDEO CLIPS SECTION */}
+        <div className="px-8 pb-10">
+          <div className="rounded-3xl border border-[#e5e7eb] bg-white shadow-sm overflow-hidden">
+            {/* Header */}
+            <div className="flex items-center justify-between border-b border-[#e5e7eb] px-8 py-5">
+              <div className="flex items-center gap-3">
+                <Video className="h-6 w-6 text-blue-500" />
+                <h3 className="text-[18px] font-semibold text-[#111827]">Video đã lưu</h3>
+                {!clipsLoading && (
+                  <span className="rounded-full bg-blue-50 px-3 py-0.5 text-[13px] font-medium text-blue-600">
+                    {clips.length} clip
+                  </span>
+                )}
+              </div>
+              <button
+                onClick={refreshClips}
+                className="flex items-center gap-2 rounded-xl border border-[#e5e7eb] px-4 py-2 text-[14px] font-medium text-[#4b5563] hover:bg-gray-50"
+              >
+                <RefreshCw className={`h-4 w-4 ${clipsLoading ? "animate-spin" : ""}`} />
+                Làm mới
+              </button>
+            </div>
+
+            {/* Video player */}
+            {playingClip && (
+              <div className="border-b border-[#e5e7eb] bg-black">
+                <div className="relative">
+                  <video
+                    src={`${STREAM_BASE}${playingClip.url}`}
+                    controls
+                    autoPlay
+                    className="mx-auto max-h-[420px] w-full"
+                    style={{ background: "#000" }}
+                  />
+                  <button
+                    onClick={() => setPlayingClip(null)}
+                    className="absolute right-4 top-4 rounded-xl bg-black/60 px-3 py-1.5 text-[13px] font-medium text-white hover:bg-black/80"
+                  >
+                    ✕ Đóng
+                  </button>
+                  <div className="absolute bottom-4 left-4 rounded-xl bg-black/60 px-3 py-1.5 text-[13px] text-white">
+                    {playingClip.path}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Clip list */}
+            {clipsLoading ? (
+              <div className="flex items-center justify-center py-16 text-[#6b7280]">
+                <RefreshCw className="mr-3 h-5 w-5 animate-spin" />
+                Đang tải danh sách video...
+              </div>
+            ) : clips.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-16 text-[#9ca3af]">
+                <Video className="mb-3 h-10 w-10 opacity-40" />
+                <p className="text-[16px]">Chưa có video nào được lưu</p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-2 gap-0 divide-x divide-y divide-[#e5e7eb] sm:grid-cols-3 lg:grid-cols-4">
+                {clips.map((clip) => {
+                  const isPlaying = playingClip?.path === clip.path;
+                  return (
+                    <button
+                      key={clip.path}
+                      onClick={() => setPlayingClip(isPlaying ? null : clip)}
+                      className={`flex flex-col items-start gap-2 p-5 text-left transition hover:bg-blue-50 ${isPlaying ? "bg-blue-50 ring-inset ring-2 ring-blue-400" : ""}`}
+                    >
+                      <div className="flex w-full items-center justify-between">
+                        <PlayCircle className={`h-7 w-7 ${isPlaying ? "text-blue-500" : "text-[#9ca3af]"}`} />
+                        <span className="text-[12px] font-medium text-[#9ca3af]">{fmtSize(clip.size)}</span>
+                      </div>
+                      <div className="w-full truncate text-[14px] font-semibold text-[#111827]">
+                        {clip.path.split("/").pop().replace(".mp4", "")}
+                      </div>
+                      <div className="flex items-center gap-1.5 text-[12px] text-[#6b7280]">
+                        <Clock className="h-3.5 w-3.5" />
+                        {fmtMtime(clip.mtime)}
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        </div>
+
       </main>
     </div>
   );
